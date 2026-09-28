@@ -1,0 +1,492 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ---------------------------------------------------------------------
+   * LIGHT is the base token set. Everything inherits from :root, so a
+   * component only ever references a semantic name, never a raw hex value.
+   * Brand/accent tokens default to Boostov blue and are overridden inline
+   * per business by lib/connect-theme.ts.
+   * ------------------------------------------------------------------- */
+  :root {
+    color-scheme: light;
+
+    --background: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f2f4f7;
+    --surface-3: #e9edf2;
+    --surface-inset: #f8fafc;
+    --surface-glass: rgba(255, 255, 255, 0.86);
+
+    --foreground: #0b1220;
+    --foreground-2: #33415a;
+    --muted: #64748b;
+    --muted-2: #94a3b8;
+
+    --border: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.14);
+
+    --brand: #2563eb;
+    --on-brand: #ffffff;
+    --brand-text: #2563eb;
+    --brand-hover: #1d4ed8;
+    --brand-soft: #eff4ff;
+    --brand-soft-2: #e0eaff;
+    --brand-soft-border: #d6e2ff;
+    --ring: rgba(37, 99, 235, 0.28);
+
+    /* Separating ring for the business logo where it overlaps a cover. Declared
+     * once and never per appearance: the circle must read the same in light and
+     * dark. On a light surface it is invisible and does nothing, which is
+     * exactly what is wanted; on a dark surface it is what makes the circle
+     * read as a circle instead of the cover's rectangle. */
+    --avatar-ring: #ffffff;
+
+    --success: #15803d;
+    --success-soft: #ecfdf3;
+    --success-border: #c9f0d8;
+    --warning: #b45309;
+    --warning-soft: #fffaeb;
+    --warning-border: #fdeab4;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --danger-border: #fbcfcf;
+    --info: #0369a1;
+    --info-soft: #f0f9ff;
+    --info-border: #c9e6f7;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -8px rgba(15, 23, 42, 0.14);
+    --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.03), 0 14px 30px -16px rgba(15, 23, 42, 0.18);
+    --shadow-lg: 0 4px 10px rgba(15, 23, 42, 0.04), 0 28px 60px -28px rgba(15, 23, 42, 0.26);
+    --overlay: rgba(8, 11, 16, 0.62);
+    --scrim: rgba(6, 8, 13, 0.94);
+
+    --radius-card: 20px;
+    --radius-control: 14px;
+    --radius-tile: 12px;
+
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* ---------------------------------------------------------------------
+   * DARK serves two callers and is declared only once:
+   *  1. `.dark` is written onto <html> by next-themes for the app shell
+   *     (admin + merchant dashboard), and inherits down the tree.
+   *  2. `:root[data-appearance='dark'] .connect-scope` lets a public profile
+   *     visitor force dark on the card alone, independent of the app theme.
+   * ------------------------------------------------------------------- */
+  .dark,
+  :root[data-appearance='dark'] .connect-scope {
+    color-scheme: dark;
+
+    --background: #090b10;
+    --surface: #11141b;
+    --surface-2: #171b24;
+    --surface-3: #1e232e;
+    --surface-inset: #0d1016;
+    --surface-glass: rgba(17, 20, 27, 0.82);
+
+    --foreground: #f8fafc;
+    --foreground-2: #c3ccdb;
+    --muted: #94a3b8;
+    --muted-2: #6b7a90;
+
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    --success: #4ade80;
+    --success-soft: rgba(34, 197, 94, 0.14);
+    --success-border: rgba(34, 197, 94, 0.26);
+    --warning: #fbbf24;
+    --warning-soft: rgba(245, 158, 11, 0.14);
+    --warning-border: rgba(245, 158, 11, 0.26);
+    --danger: #f87171;
+    --danger-soft: rgba(239, 68, 68, 0.14);
+    --danger-border: rgba(239, 68, 68, 0.26);
+    --info: #38bdf8;
+    --info-soft: rgba(56, 189, 248, 0.14);
+    --info-border: rgba(56, 189, 248, 0.26);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -10px rgba(0, 0, 0, 0.7);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.45), 0 18px 36px -20px rgba(0, 0, 0, 0.8);
+    --shadow-lg: 0 6px 14px rgba(0, 0, 0, 0.5), 0 32px 64px -32px rgba(0, 0, 0, 0.9);
+    --overlay: rgba(2, 4, 8, 0.74);
+    --scrim: rgba(3, 5, 9, 0.96);
+
+    /* Business accent companions for a dark surface. The accent itself is a
+     * single value (--business-accent, set inline by the public card); only
+     * the two contrast-dependent companions are chosen here. */
+    --on-business-accent: var(--on-business-accent-d, var(--on-brand));
+    --business-accent-text: var(--business-accent-text-d, var(--brand-text));
+    --accent-hover-shift: #ffffff;
+  }
+
+  /* A declared value always beats an inherited one, so this block makes the
+   * public profile light even when the surrounding app theme is dark. It is
+   * written after the dark block, and the data-appearance rule above is more
+   * specific, so visitor choice still wins. */
+  .connect-scope {
+    color-scheme: light;
+
+    --background: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f2f4f7;
+    --surface-3: #e9edf2;
+    --surface-inset: #f8fafc;
+    --surface-glass: rgba(255, 255, 255, 0.86);
+
+    --foreground: #0b1220;
+    --foreground-2: #33415a;
+    --muted: #64748b;
+    --muted-2: #94a3b8;
+
+    --border: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.14);
+
+    --success: #15803d;
+    --success-soft: #ecfdf3;
+    --success-border: #c9f0d8;
+    --warning: #b45309;
+    --warning-soft: #fffaeb;
+    --warning-border: #fdeab4;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --danger-border: #fbcfcf;
+    --info: #0369a1;
+    --info-soft: #f0f9ff;
+    --info-border: #c9e6f7;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -8px rgba(15, 23, 42, 0.14);
+    --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.03), 0 14px 30px -16px rgba(15, 23, 42, 0.18);
+    --shadow-lg: 0 4px 10px rgba(15, 23, 42, 0.04), 0 28px 60px -28px rgba(15, 23, 42, 0.26);
+    --overlay: rgba(8, 11, 16, 0.62);
+    --scrim: rgba(6, 8, 13, 0.94);
+
+    /* Business accent companions for a light surface. */
+    --on-business-accent: var(--on-business-accent-l, var(--on-brand));
+    --business-accent-text: var(--business-accent-text-l, var(--brand-text));
+    --accent-hover-shift: #0b1220;
+  }
+
+  /* ---------------------------------------------------------------------
+   * THE ACCENT SYSTEM.
+   *
+   * `--business-accent` is the only colour a business chooses, and it is
+   * written inline by ConnectPublicCard. Every accent token below is derived
+   * from it here, in one place, so the selected colour drives the whole
+   * public profile and nothing can fall back to a fixed Boostov blue.
+   *
+   * This block deliberately targets `.connect-scope` itself -- the same element
+   * that carries the inline `--business-accent`. A custom property is resolved
+   * on the element that declares it, so deriving the family on any descendant
+   * would fall through to the `:root` default instead of the business colour.
+   * ------------------------------------------------------------------- */
+  .connect-scope {
+    --brand: var(--business-accent, #2563eb);
+    --on-brand: var(--on-business-accent, #ffffff);
+    --brand-text: var(--business-accent-text, var(--brand));
+
+    /* Softer washes, borders and rings are transparent mixes of the same
+     * accent, so they always stay in the chosen hue. */
+    --brand-soft: color-mix(in srgb, var(--brand) 12%, transparent);
+    --brand-soft-2: color-mix(in srgb, var(--brand) 20%, transparent);
+    --brand-soft-border: color-mix(in srgb, var(--brand) 30%, transparent);
+    --ring: color-mix(in srgb, var(--brand) 34%, transparent);
+
+    /* Hover/active lean towards the mode's shift colour: darker on a light
+     * surface, brighter on a dark one. Still the same hue either way. */
+    --brand-hover: color-mix(in srgb, var(--brand) 88%, var(--accent-hover-shift));
+    --brand-deep: color-mix(in srgb, var(--brand) 72%, #05070b);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+      'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--brand);
+    color: var(--on-brand);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  button,
+  [role='button'] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Inputs never inherit the browser's UA colors, which would ignore the theme. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-2);
+  }
+
+  /* Dark mode keeps scrollbars from flashing white. */
+  * {
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
+
+@layer components {
+  /* ---------------- Surfaces ---------------- */
+  .ct-card {
+    @apply rounded-[20px] border border-line bg-surface;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ct-card-flat {
+    @apply rounded-[20px] border border-line bg-surface;
+  }
+
+  .ct-inset {
+    @apply rounded-[16px] border border-line bg-surface-2 p-4;
+  }
+
+  /* ---------------- Typography ---------------- */
+  .ct-display {
+    @apply text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] text-ink;
+  }
+
+  .ct-title {
+    @apply text-[17px] font-semibold leading-tight tracking-[-0.01em] text-ink;
+  }
+
+  .ct-section-title {
+    @apply text-[12px] font-semibold uppercase tracking-[0.12em] text-muted;
+  }
+
+  .ct-body {
+    @apply text-[14px] leading-relaxed text-ink-2;
+  }
+
+  .ct-meta {
+    @apply text-[12.5px] leading-relaxed text-muted;
+  }
+
+  .ct-num {
+    @apply font-mono tabular-nums tracking-[-0.01em];
+  }
+
+  /* ---------------- Controls ---------------- */
+  .ct-control {
+    @apply w-full rounded-[14px] border border-line bg-surface px-3.5 py-2.5 text-[14px]
+      text-ink outline-none transition-colors duration-150
+      placeholder:text-muted-2 hover:border-line-strong
+      focus:border-brand focus:ring-2 focus:ring-ring;
+  }
+
+  .ct-control-sm {
+    @apply rounded-[12px] px-3 py-2 text-[13px];
+  }
+
+  .ct-label {
+    @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted;
+  }
+
+  .ct-hint {
+    @apply mt-1.5 text-[11.5px] leading-relaxed text-muted;
+  }
+
+  /* ---------------- Buttons ---------------- */
+  .ct-btn {
+    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-[14px]
+      text-[13.5px] font-semibold transition-all duration-150
+      active:scale-[0.985] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .ct-btn-md {
+    @apply h-11 px-4;
+  }
+
+  .ct-btn-sm {
+    @apply h-9 px-3.5 text-[12.5px];
+  }
+
+  .ct-btn-lg {
+    @apply h-[52px] px-6 text-[15px];
+  }
+
+  .ct-btn-primary {
+    @apply bg-brand text-on-brand hover:bg-brand-hover;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  }
+
+  .ct-btn-outline {
+    @apply border border-line bg-surface text-ink hover:border-line-strong hover:bg-surface-2;
+  }
+
+  .ct-btn-ghost {
+    @apply text-ink-2 hover:bg-surface-2 hover:text-ink;
+  }
+
+  .ct-btn-quiet {
+    @apply border border-line bg-surface-2 text-ink-2 hover:bg-surface-3 hover:text-ink;
+  }
+
+  .ct-btn-danger {
+    @apply border border-danger-border bg-danger-soft text-danger hover:bg-danger hover:text-white;
+  }
+
+  .ct-btn-icon {
+    @apply h-9 w-9 rounded-[12px] text-ink-2 transition-colors duration-150 hover:bg-surface-2
+      hover:text-ink active:scale-95;
+  }
+
+  /* ---------------- Bits ---------------- */
+  .ct-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold;
+  }
+
+  .ct-tile {
+    @apply flex shrink-0 items-center justify-center rounded-[12px];
+  }
+
+  .ct-divider {
+    @apply border-t border-line;
+  }
+
+  .ct-link {
+    @apply text-brand-text underline-offset-4 transition-colors hover:underline;
+  }
+}
+
+@layer utilities {
+  .ct-scroll-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ct-scroll-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-fadeIn {
+    animation: cf-fadeIn 200ms var(--ease-out) both;
+  }
+
+  .animate-scaleUp {
+    animation: cf-scaleUp 200ms var(--ease-out) both;
+  }
+
+  .animate-rise {
+    animation: cf-rise 260ms var(--ease-out) both;
+  }
+
+  /* Staggers a list without JS: each child waits a little longer. */
+  .ct-stagger > * {
+    animation: cf-rise 260ms var(--ease-out) both;
+  }
+
+  .ct-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .ct-stagger > *:nth-child(2) { animation-delay: 30ms; }
+  .ct-stagger > *:nth-child(3) { animation-delay: 60ms; }
+  .ct-stagger > *:nth-child(4) { animation-delay: 90ms; }
+  .ct-stagger > *:nth-child(5) { animation-delay: 120ms; }
+  .ct-stagger > *:nth-child(6) { animation-delay: 150ms; }
+  .ct-stagger > *:nth-child(7) { animation-delay: 180ms; }
+  .ct-stagger > *:nth-child(8) { animation-delay: 210ms; }
+  .ct-stagger > *:nth-child(n + 9) { animation-delay: 230ms; }
+}
+
+/* ---------------------------------------------------------------------
+ * THE BUSINESS LOGO MASK.
+ *
+ * Deliberately outside @layer. Unlayered rules beat every layered rule in the
+ * cascade, so this is the only place the circular avatar shape is defined and
+ * nothing can square it off: not a `rounded-*` utility a future edit might
+ * add to the same element, not a theme block, not `.ct-tile`.
+ *
+ * That matters because the shape has to be identical in light and dark. When
+ * the edge is painted with a theme colour the circle is invisible against a
+ * dark cover in dark mode, and the eye reads the rectangular cover boundary
+ * instead -- which is what made the logo look clipped or polygonal.
+ * ------------------------------------------------------------------- */
+.ct-avatar {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  /* Locks the box square even if a flex or grid parent tries to stretch it,
+   * and keeps the two axes equal at every size. */
+  aspect-ratio: 1 / 1;
+  border-radius: 9999px;
+  overflow: hidden;
+  background-color: var(--surface);
+  isolation: isolate;
+  /* A subtle background and definition behind the circle, drawn as an inset
+   * hairline so it never changes the circle's footprint. */
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm);
+}
+
+/* A rectangular or transparent upload is letterboxed inside the circle rather
+ * than cropped by it, and is masked by the same shape. */
+.ct-avatar > img {
+  border-radius: 9999px;
+  object-fit: contain;
+}
+
+/* Where the avatar overlaps a cover, an outward ring keeps the circle legible
+ * over any photo. `--avatar-ring` is a single neutral defined once in :root and
+ * never re-declared per theme, so the edge looks the same in both modes. */
+.ct-avatar-floating {
+  box-shadow:
+    0 0 0 3px var(--avatar-ring),
+    var(--shadow-md);
+}
+
+@keyframes cf-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cf-scaleUp {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cf-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-scaleUp,
+  .animate-rise,
+  .ct-stagger > * {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+  }
+}
