@@ -71,14 +71,19 @@ export default function PublicConnectProfilePage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="connect-scope flex min-h-dvh justify-center bg-canvas sm:py-6">
-        <div className="w-full max-w-card border-x border-line bg-surface sm:rounded-card sm:border">
-          <div className="h-[176px] w-full animate-pulse rounded-t-card bg-surface-2 sm:h-[200px]" />
-          <div className="-mt-[58px] px-5 text-center">
-            <div className="relative mx-auto h-[116px] w-[116px] animate-pulse rounded-full border-[3px] border-surface bg-surface-2 shadow-md" />
-            <div className="mx-auto mt-5 h-6 w-40 animate-pulse rounded-full bg-surface-2" />
-            <div className="mx-auto mt-3 h-3.5 w-56 animate-pulse rounded-full bg-surface-2" />
-            <div className="ct-btn ct-btn-lg mt-6 w-full animate-pulse bg-surface-2 text-transparent">
+      <div className="connect-scope relative isolate flex min-h-dvh justify-center sm:px-6 sm:py-12">
+        <div aria-hidden className="bc-backdrop" />
+        <div className="bc-card flex w-full max-w-card flex-col bg-surface">
+          <div className="bc-hero animate-pulse bg-surface-3">
+            <div className="bc-plate-stage">
+              <div className="h-full w-full rounded-[20px] bg-surface-2/60" />
+            </div>
+          </div>
+          <div className="bc-sheet px-6 pt-8">
+            <div className="h-6 w-28 animate-pulse rounded-full bg-surface-2" />
+            <div className="mt-4 h-8 w-4/5 animate-pulse rounded-[10px] bg-surface-2" />
+            <div className="mt-3 h-3.5 w-3/5 animate-pulse rounded-full bg-surface-2" />
+            <div className="mt-6 flex h-[60px] w-full animate-pulse items-center rounded-[20px] bg-surface-2 px-6 text-transparent">
               Save Contact
             </div>
           </div>
@@ -89,13 +94,19 @@ export default function PublicConnectProfilePage({ params }: PageProps) {
 
   if (notFoundState || !business || !business.is_active) {
     return (
-      <div className="connect-scope flex min-h-dvh items-center justify-center bg-canvas p-4 text-center">
-        <div className="ct-card w-full max-w-sm space-y-3 p-8">
-          <div className="ct-tile mx-auto h-12 w-12 bg-surface-2 text-muted">
-            <LinkIcon className="h-6 w-6" strokeWidth={2} />
+      <div className="connect-scope relative isolate flex min-h-dvh items-center justify-center p-5 text-center">
+        <div aria-hidden className="bc-backdrop" />
+        <div className="bc-in w-full max-w-sm overflow-hidden rounded-[30px] border border-line bg-surface px-8 pb-9 pt-10 shadow-lg">
+          <div className="relative mx-auto grid h-24 w-24 place-items-center">
+            <span aria-hidden className="absolute inset-0 rounded-[28px] border-2 border-dashed border-line-strong" />
+            <span className="grid h-14 w-14 rotate-[-8deg] place-items-center rounded-[18px] bg-brand-soft text-brand-text">
+              <LinkIcon className="h-6 w-6" strokeWidth={2.25} />
+            </span>
           </div>
-          <h2 className="ct-title text-[20px]">Profile Not Found</h2>
-          <p className="ct-meta">
+          <h2 className="bc-display mt-6 text-[26px] font-extrabold leading-tight tracking-[-0.03em] text-ink">
+            Profile Not Found
+          </h2>
+          <p className="mx-auto mt-2.5 max-w-[30ch] text-[14px] leading-relaxed text-muted">
             This NFC profile page does not exist or has been deactivated.
           </p>
         </div>

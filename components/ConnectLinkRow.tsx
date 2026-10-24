@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronRightIcon } from './connect-platform-icons';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ConnectRowItem {
@@ -21,29 +21,64 @@ export interface ConnectRowItem {
 interface Props {
   item: ConnectRowItem;
   onSelect: (item: ConnectRowItem) => void;
+  /**
+   * Presentation only. `row` sits inside a grouped list, `bento` is a large
+   * tile for the primary contact actions; `bento-solid` is the accent tile.
+   * Link, tracking and content are identical across all three.
+   */
+  variant?: 'row' | 'bento' | 'bento-solid';
 }
 
-export default function ConnectLinkRow({ item, onSelect }: Props) {
+export default function ConnectLinkRow({ item, onSelect, variant = 'row' }: Props) {
+  const bento = variant !== 'row';
   const className = cn(
-    'group flex w-full items-center gap-3.5 rounded-control border border-line bg-surface px-3.5 py-3',
-    'text-left shadow-xs transition-all duration-150',
-    'hover:border-brand-soft-border hover:bg-surface-2 active:scale-[0.99]'
+    'group',
+    bento ? 'bc-bento' : 'bc-row',
+    variant === 'bento-solid' && 'bc-bento-solid'
   );
 
-  const body = (
-    <>
-      <span className={cn('ct-tile h-11 w-11', item.tile)}>{item.icon}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13.5px] font-semibold leading-tight text-ink transition-colors duration-150 group-hover:text-brand-text">
-          {item.label}
-        </span>
-        <span className="mt-0.5 block truncate text-[11.5px] leading-tight text-muted">
-          {item.value}
-        </span>
+  const go = item.href && (
+    <span className="bc-row-go" aria-hidden>
+      <ArrowRight className="h-4 w-4 rtl:-scale-x-100" strokeWidth={2.25} />
+    </span>
+  );
+
+  const text = (
+    <span className={cn('min-w-0', !bento && 'flex-1')}>
+      <span
+        dir="auto"
+        className={cn(
+          'block truncate font-semibold leading-tight',
+          bento ? 'text-[15px] tracking-[-0.01em]' : 'text-[14px] text-ink'
+        )}
+      >
+        {item.label}
       </span>
-      {item.href && (
-        <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted-2 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-brand" />
-      )}
+      <span
+        dir="auto"
+        className={cn(
+          'mt-1 block truncate text-[12px] leading-tight',
+          variant === 'bento-solid' ? 'opacity-80' : 'text-muted'
+        )}
+      >
+        {item.value}
+      </span>
+    </span>
+  );
+
+  const body = bento ? (
+    <>
+      <span className="flex items-start justify-between gap-2">
+        <span className={cn('bc-row-tile', item.tile)}>{item.icon}</span>
+        {go}
+      </span>
+      {text}
+    </>
+  ) : (
+    <>
+      <span className={cn('bc-row-tile', item.tile)}>{item.icon}</span>
+      {text}
+      {go}
     </>
   );
 

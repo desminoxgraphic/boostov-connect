@@ -490,3 +490,830 @@
     transition-duration: 1ms !important;
   }
 }
+
+/* =====================================================================
+ * PUBLIC CARD v2 -- "Signal" art direction.
+ *
+ * The NFC card the visitor just tapped materialises as a floating 3D plate in
+ * the hero, orbited by the signal arcs from the Boostov mark. Everything is
+ * scoped to the public profile (`bc-` prefix) and reads only the derived
+ * --brand-* family, so each business's accent drives the whole look.
+ *
+ * Motion is transform/opacity only so it stays on the compositor on low-end
+ * Android, decorative layers never take pointer events or sit above copy, and
+ * all of it is switched off under prefers-reduced-motion.
+ * ------------------------------------------------------------------- */
+.connect-scope {
+  --bc-glow: color-mix(in srgb, var(--brand) 62%, #ffffff);
+  --bc-shadow-brand: color-mix(in srgb, var(--brand) 55%, transparent);
+  --bc-sheet-radius: 30px;
+  --bc-safe-top: env(safe-area-inset-top, 0px);
+  --bc-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bc-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root[data-appearance='dark'] .connect-scope {
+  --bc-shadow-brand: color-mix(in srgb, var(--brand) 42%, transparent);
+}
+
+.bc-display {
+  font-family: var(--font-display), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------------- Page backdrop ---------------- */
+.bc-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 45% at 50% -8%, color-mix(in srgb, var(--brand) 24%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 100% 100%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 70%),
+    radial-gradient(35% 35% at 0% 70%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 70%),
+    var(--background);
+}
+
+/* Huge slow orbit rings beside the card, wide screens only. */
+.bc-orbit {
+  position: absolute;
+  display: none;
+  width: 820px;
+  height: 820px;
+  perspective: 1400px;
+}
+
+@media (min-width: 640px) {
+  .bc-orbit { display: block; }
+}
+
+.bc-orbit-left { left: -420px; top: 4%; }
+.bc-orbit-right { right: -460px; bottom: -14%; }
+
+.bc-orbit-plane {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(66deg) rotateZ(0deg);
+  animation: bc-orbit 70s linear infinite;
+}
+
+.bc-orbit-right .bc-orbit-plane { animation-direction: reverse; }
+
+.bc-orbit-plane > span {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in srgb, var(--brand) 28%, transparent);
+}
+
+.bc-orbit-plane > span:nth-child(1) { inset: 0; }
+.bc-orbit-plane > span:nth-child(2) { inset: 100px; border-style: dashed; }
+.bc-orbit-plane > span:nth-child(3) { inset: 210px; }
+
+/* ---------------- Card shell ---------------- */
+.bc-card {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+@media (min-width: 640px) {
+  .bc-card {
+    border-radius: 34px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 50px 90px -40px var(--bc-shadow-brand),
+      var(--shadow-lg);
+  }
+}
+
+/* ---------------- Hero ---------------- */
+.bc-hero {
+  position: relative;
+  height: calc(262px + var(--bc-safe-top));
+  overflow: hidden;
+  background: var(--brand-deep);
+}
+
+@media (min-width: 640px) {
+  .bc-hero { height: 290px; }
+}
+
+.bc-hero-media {
+  position: absolute;
+  inset: 0;
+  animation: bc-fade 900ms var(--ease-out) both;
+}
+
+.bc-hero-fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 90% at 12% 0%, color-mix(in srgb, var(--brand) 55%, #ffffff) 0%, transparent 60%),
+    radial-gradient(60% 80% at 100% 100%, color-mix(in srgb, var(--brand) 50%, #000000) 0%, transparent 70%),
+    linear-gradient(140deg, var(--brand) 0%, var(--brand-deep) 100%);
+}
+
+/* Dot-matrix grain so a flat accent never reads as a plain rectangle. */
+.bc-hero-fallback::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1.2px);
+  background-size: 13px 13px;
+  -webkit-mask-image: linear-gradient(165deg, #000 0%, transparent 70%);
+  mask-image: linear-gradient(165deg, #000 0%, transparent 70%);
+}
+
+/* A cover photo gets an accent wash plus a top shade so the plate and the
+ * appearance control stay legible on any image. */
+.bc-hero-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0) 34%),
+    linear-gradient(0deg, color-mix(in srgb, var(--brand-deep) 70%, transparent) 0%, transparent 60%);
+}
+
+/* Tilted orbit rings centred on the plate: the 3D signal. */
+.bc-signal {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--bc-safe-top) + 134px);
+  width: 420px;
+  height: 420px;
+  margin: -210px 0 0 -210px;
+  perspective: 800px;
+  pointer-events: none;
+}
+
+.bc-signal-plane {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(70deg) rotateZ(0deg);
+  animation: bc-signal 22s linear infinite;
+}
+
+.bc-signal-plane > span {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.34);
+}
+
+.bc-signal-plane > span:nth-child(1) { inset: 0; border-color: rgba(255, 255, 255, 0.2); }
+.bc-signal-plane > span:nth-child(2) { inset: 56px; border-style: dashed; border-color: rgba(255, 255, 255, 0.3); }
+.bc-signal-plane > span:nth-child(3) { inset: 112px; }
+
+/* Satellites riding the rings. */
+.bc-signal-plane > span::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 0 14px 4px rgba(255, 255, 255, 0.6);
+}
+
+.bc-signal-plane > span:nth-child(2)::after { left: auto; right: -5px; opacity: 0.7; }
+.bc-signal-plane > span:nth-child(3)::after { display: none; }
+
+/* ---------------- The floating NFC plate ---------------- */
+.bc-plate-stage {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--bc-safe-top) + 60px);
+  width: 236px;
+  height: 148px;
+  margin-left: -118px;
+  perspective: 900px;
+  animation: bc-plate-in 1000ms var(--bc-spring) 120ms both;
+}
+
+.bc-plate-float {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: bc-float 6s ease-in-out 1200ms infinite;
+}
+
+/* Pointer tilt lives on its own layer so it composes with the idle sway. */
+.bc-plate-tilt {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--bc-rx, 0deg)) rotateY(var(--bc-ry, 0deg));
+  transition: transform 500ms var(--ease-out);
+}
+
+.bc-plate {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 20px;
+  color: var(--on-brand);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--brand) 60%, #ffffff) 0%, transparent 55%),
+    linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 30px 50px -22px rgba(0, 0, 0, 0.6);
+  transform: rotateX(16deg) rotateY(-18deg) rotateZ(2deg);
+  animation: bc-sway 9s ease-in-out 1200ms infinite;
+}
+
+/* Holographic foil that slides across the plate. */
+.bc-plate-sheen {
+  position: absolute;
+  inset: -40% -60%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.05) 42%,
+    rgba(255, 255, 255, 0.42) 48%,
+    rgba(186, 230, 253, 0.25) 51%,
+    rgba(255, 255, 255, 0.05) 56%,
+    transparent 62%
+  );
+  transform: translateX(-45%);
+  animation: bc-foil 5.5s var(--ease-out) 1300ms infinite;
+}
+
+.bc-plate-chip {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 38px;
+  height: 28px;
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, transparent 31%, rgba(0, 0, 0, 0.18) 32%, rgba(0, 0, 0, 0.18) 35%, transparent 36%, transparent 64%, rgba(0, 0, 0, 0.18) 65%, rgba(0, 0, 0, 0.18) 68%, transparent 69%),
+    linear-gradient(0deg, transparent 46%, rgba(0, 0, 0, 0.18) 47%, rgba(0, 0, 0, 0.18) 53%, transparent 54%),
+    linear-gradient(135deg, #fde68a, #d4a017 55%, #fbbf24);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.bc-plate-nfc {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  width: 34px;
+  height: 34px;
+  opacity: 0.85;
+}
+
+.bc-plate-nfc path { animation: bc-arc 2.4s ease-in-out infinite; }
+.bc-plate-nfc path:nth-child(2) { animation-delay: 200ms; }
+.bc-plate-nfc path:nth-child(3) { animation-delay: 400ms; }
+
+.bc-plate-lines {
+  position: absolute;
+  left: 118px;
+  bottom: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.bc-plate-lines > span {
+  display: block;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.28;
+}
+
+.bc-plate-lines > span:nth-child(1) { width: 58px; }
+.bc-plate-lines > span:nth-child(2) { width: 36px; opacity: 0.18; }
+
+.bc-plate-logo {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  margin-top: -44px;
+}
+
+/* Soft contact shadow that breathes with the float. */
+.bc-plate-shadow {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -26px;
+  height: 22px;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.4), transparent);
+  animation: bc-shadow 6s ease-in-out 1200ms infinite;
+}
+
+.bc-toggle-slot {
+  position: absolute;
+  z-index: 10;
+  top: calc(12px + var(--bc-safe-top));
+  right: 12px;
+}
+
+/* ---------------- Sheet ---------------- */
+.bc-sheet {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(var(--bc-sheet-radius) * -1);
+  border-radius: var(--bc-sheet-radius) var(--bc-sheet-radius) 0 0;
+  background: var(--surface);
+  box-shadow: 0 -14px 30px -20px rgba(0, 0, 0, 0.45);
+}
+
+/* Grab-handle notch that ties the sheet to the plate above it. */
+.bc-sheet::before {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 40px;
+  height: 4px;
+  margin-left: -20px;
+  border-radius: 9999px;
+  background: var(--border-strong);
+}
+
+.bc-name {
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: balance;
+}
+
+.bc-kicker {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--brand-text) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-text) 18%, transparent);
+  color: var(--brand-text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.bc-kicker-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--brand-text);
+}
+
+.bc-kicker-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--brand-text);
+  animation: bc-ping 2.4s var(--ease-out) 1400ms infinite;
+}
+
+/* ---------------- Entrance ---------------- */
+.bc-in {
+  animation: bc-rise 680ms var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* ---------------- Primary CTA ---------------- */
+.bc-cta {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+  min-height: 60px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 22px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 86%, #ffffff) 0%, var(--brand) 50%, var(--brand-hover) 100%);
+  color: var(--on-brand);
+  font-weight: 650;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-align: start;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 20px 36px -16px var(--bc-shadow-brand),
+    0 2px 4px rgba(15, 23, 42, 0.08);
+  transition: transform 180ms var(--ease-out);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.bc-cta:hover { transform: translateY(-2px); }
+.bc-cta:active { transform: scale(0.975); transition-duration: 80ms; }
+
+.bc-cta-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--on-brand) 18%, transparent);
+  transition: transform 260ms var(--bc-spring);
+}
+
+.bc-cta:hover .bc-cta-icon { transform: rotate(-10deg) scale(1.08); }
+.bc-cta:active .bc-cta-icon { transform: scale(0.9); }
+
+/* Light sweep: once after the entrance, then on every hover. */
+.bc-cta::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  z-index: -1;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+  transform: translateX(-160%) skewX(-18deg);
+  animation: bc-sweep 1100ms var(--ease-out) 1100ms both;
+}
+
+.bc-cta:hover::after { animation: bc-sweep-hover 900ms var(--ease-out) both; }
+
+/* ---------------- Section heading ---------------- */
+.bc-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.bc-heading::after {
+  content: '';
+  flex: 1;
+  align-self: center;
+  height: 1px;
+  background: var(--border-strong);
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent);
+  mask-image: linear-gradient(90deg, #000, transparent);
+}
+
+/* Oversized outlined index: an ornament, hidden from assistive tech. */
+.bc-heading-num {
+  font-family: var(--font-display), var(--font-geist-sans), sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--brand-text);
+  opacity: 0.85;
+}
+
+.bc-heading-meta {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* ---------------- Rows + bento tiles ---------------- */
+.bc-group {
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: 4px;
+}
+
+.bc-row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 10px 10px 10px 12px;
+  border-radius: 20px;
+  text-align: start;
+  transition: background-color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+.bc-row + .bc-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 70px;
+  right: 14px;
+  height: 1px;
+  background: var(--border);
+}
+
+a.bc-row:hover { background: var(--surface-2); }
+a.bc-row:active { transform: scale(0.985); transition-duration: 80ms; }
+
+.bc-row-tile {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  transition: transform 260ms var(--bc-spring), box-shadow 260ms var(--ease-out);
+}
+
+a.bc-row:hover .bc-row-tile,
+a.bc-bento:hover .bc-row-tile {
+  transform: translateY(-2px) rotate(-6deg);
+  box-shadow: 0 10px 18px -10px var(--bc-shadow-brand);
+}
+
+.bc-row-go {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  transition: transform 220ms var(--ease-out), background-color 220ms, color 220ms;
+}
+
+a.bc-row:hover .bc-row-go,
+a.bc-bento:hover .bc-row-go {
+  background: var(--brand);
+  color: var(--on-brand);
+  transform: rotate(-45deg);
+}
+
+/* Big primary tiles. The first one is solid accent, the rest are tinted. */
+.bc-bento {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  min-width: 0;
+  min-height: 132px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+  transition: transform 200ms var(--ease-out);
+}
+
+.bc-bento:hover { transform: translateY(-3px); }
+.bc-bento:active { transform: scale(0.97); transition-duration: 80ms; }
+
+/* Echo of the signal arcs in the tile corner. */
+.bc-bento::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -46px;
+  bottom: -46px;
+  width: 120px;
+  height: 120px;
+  border-radius: 9999px;
+  border: 14px solid var(--brand-soft);
+  box-shadow: 0 0 0 16px transparent, 0 0 0 30px var(--brand-soft);
+  opacity: 0.8;
+  transition: transform 500ms var(--ease-out);
+}
+
+.bc-bento:hover::after { transform: scale(1.12); }
+
+.bc-bento-solid {
+  border-color: transparent;
+  background:
+    radial-gradient(100% 120% at 0% 0%, color-mix(in srgb, var(--brand) 70%, #ffffff) 0%, transparent 60%),
+    linear-gradient(140deg, var(--brand), var(--brand-deep));
+  color: var(--on-brand);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 20px 34px -20px var(--bc-shadow-brand);
+}
+
+.bc-bento-solid::after {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 16px transparent, 0 0 0 30px rgba(255, 255, 255, 0.08);
+}
+
+.bc-bento-solid .bc-row-tile {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--on-brand);
+}
+
+.bc-bento-solid .bc-row-go {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--on-brand);
+}
+
+a.bc-bento-solid:hover .bc-row-go {
+  background: var(--on-brand);
+  color: var(--brand);
+}
+
+/* ---------------- Gallery ---------------- */
+.bc-shot {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--surface-2);
+  transition: transform 220ms var(--ease-out);
+}
+
+.bc-shot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--border);
+  pointer-events: none;
+}
+
+.bc-shot:hover { transform: translateY(-3px); }
+.bc-shot:active { transform: scale(0.975); transition-duration: 80ms; }
+
+.bc-shot img { transition: transform 700ms var(--ease-out), opacity 300ms; }
+.bc-shot:hover img { transform: scale(1.05); }
+
+/* ---------------- Coupon / bottom message ---------------- */
+.bc-ticket {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: 28px 34px;
+  background:
+    radial-gradient(80% 120% at 100% 0%, color-mix(in srgb, var(--brand) 66%, #ffffff) 0%, transparent 55%),
+    linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
+  color: var(--on-brand);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 24px 44px -22px var(--bc-shadow-brand);
+}
+
+/* Punched notches turn the panel into a ticket. */
+.bc-ticket::before,
+.bc-ticket::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  border-radius: 9999px;
+  background: var(--surface);
+}
+
+.bc-ticket::before { left: -12px; }
+.bc-ticket::after { right: -12px; }
+
+.bc-ticket-perf {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 20px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+}
+
+.bc-ticket-arcs {
+  position: absolute;
+  z-index: -1;
+  right: -44px;
+  bottom: -70px;
+  width: 180px;
+  height: 180px;
+  pointer-events: none;
+}
+
+.bc-ticket-arcs > span {
+  position: absolute;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+}
+
+.bc-ticket-arcs > span:nth-child(1) { inset: 0; }
+.bc-ticket-arcs > span:nth-child(2) { inset: 30px; }
+.bc-ticket-arcs > span:nth-child(3) { inset: 60px; border: 0; background: rgba(255, 255, 255, 0.1); }
+
+/* ---------------- Keyframes ---------------- */
+@keyframes bc-orbit {
+  from { transform: rotateX(66deg) rotateZ(0deg); }
+  to { transform: rotateX(66deg) rotateZ(360deg); }
+}
+
+@keyframes bc-signal {
+  from { transform: rotateX(70deg) rotateZ(0deg); }
+  to { transform: rotateX(70deg) rotateZ(360deg); }
+}
+
+@keyframes bc-plate-in {
+  from { opacity: 0; transform: translateY(40px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes bc-sway {
+  0%, 100% { transform: rotateX(16deg) rotateY(-18deg) rotateZ(2deg); }
+  50% { transform: rotateX(10deg) rotateY(14deg) rotateZ(-1deg); }
+}
+
+@keyframes bc-shadow {
+  0%, 100% { opacity: 1; transform: scaleX(1); }
+  50% { opacity: 0.6; transform: scaleX(0.86); }
+}
+
+@keyframes bc-foil {
+  0% { transform: translateX(-45%); }
+  45%, 100% { transform: translateX(45%); }
+}
+
+@keyframes bc-arc {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes bc-ping {
+  0% { opacity: 0.7; transform: scale(1); }
+  80%, 100% { opacity: 0; transform: scale(2.6); }
+}
+
+@keyframes bc-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bc-fade {
+  from { opacity: 0; transform: scale(1.08); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bc-sweep {
+  from { transform: translateX(-160%) skewX(-18deg); }
+  to { transform: translateX(360%) skewX(-18deg); }
+}
+
+@keyframes bc-sweep-hover {
+  from { transform: translateX(-160%) skewX(-18deg); }
+  to { transform: translateX(360%) skewX(-18deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc-in,
+  .bc-hero-media,
+  .bc-plate-stage,
+  .bc-plate-float,
+  .bc-plate,
+  .bc-plate-sheen,
+  .bc-plate-shadow,
+  .bc-plate-nfc path,
+  .bc-signal-plane,
+  .bc-orbit-plane,
+  .bc-kicker-dot::after,
+  .bc-cta::after,
+  .bc-cta:hover::after {
+    animation: none !important;
+  }
+
+  .bc-plate-tilt { transform: none; }
+  .bc-kicker-dot::after { display: none; }
+
+  .bc-cta:hover,
+  .bc-bento:hover,
+  .bc-bento:hover::after,
+  .bc-shot:hover,
+  .bc-shot:hover img,
+  a.bc-row:hover .bc-row-tile,
+  a.bc-bento:hover .bc-row-tile,
+  a.bc-row:hover .bc-row-go,
+  a.bc-bento:hover .bc-row-go {
+    transform: none;
+  }
+}
