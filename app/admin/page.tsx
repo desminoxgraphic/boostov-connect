@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ConnectBusiness, ConnectAnalyticsSummary } from '@/lib/connect-types';
 import ThemeToggle from '@/components/ThemeToggle';
+import AdminTopBar from '@/components/AdminTopBar';
 import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
 import { cn } from '@/lib/utils';
 import {
@@ -16,7 +17,7 @@ import {
   Check,
   Power,
   LogOut,
-  Loader2,
+  AlertCircle,
   Sparkles,
   BarChart2,
   Eye,
@@ -97,88 +98,93 @@ export default function AdminDashboardPage() {
 
   if (loading && businesses.length === 0) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-muted">
-          <Loader2 className="h-7 w-7 animate-spin text-brand" />
-          <span className="text-[13px]">Loading admin panel…</span>
-        </div>
+      <div className="sh-page min-h-dvh" aria-busy="true">
+        <span className="sr-only">Loading admin panel…</span>
+        <AdminTopBar title="BOOSTOV Admin" subtitle="NFC Profiles & Analytics" />
+        <main className="mx-auto max-w-shell space-y-5 px-4 py-6 sm:py-8">
+          <div className="sh-skel h-[150px] rounded-[28px]" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="sh-skel h-[340px] rounded-[24px]" />
+            <div className="sh-skel h-[340px] rounded-[24px]" />
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="sh-page min-h-dvh">
       {/* ADMIN HEADER */}
-      <header className="sticky top-0 z-20 border-b border-line bg-glass backdrop-blur-md">
-        <div className="mx-auto flex max-w-shell items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="ct-tile h-10 w-10 bg-ink text-[15px] font-semibold text-canvas">B</div>
-            <div className="min-w-0">
-              <h1 className="truncate text-[15px] font-semibold leading-tight text-ink">BOOSTOV Admin</h1>
-              <p className="truncate text-[12px] text-muted">NFC Profiles &amp; Analytics</p>
-            </div>
-          </div>
+      <AdminTopBar title="BOOSTOV Admin" subtitle="NFC Profiles & Analytics">
+        <ThemeToggle className="hidden sm:inline-flex" />
+        <Link href="/admin/connect/new" className="sh-btn-primary max-sm:w-10 max-sm:justify-center max-sm:px-0">
+          <Plus className="h-4 w-4" strokeWidth={2.5} />
+          <span className="hidden sm:inline">Add Connect Business</span>
+        </Link>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <ThemeToggle className="hidden sm:inline-flex" />
-            <Link
-              href="/admin/connect/new"
-              className="ct-btn ct-btn-sm bg-brand text-on-brand hover:bg-brand-hover"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Add Connect Business</span>
-            </Link>
-
-            <button
-              onClick={handleLogout}
-              className="ct-btn ct-btn-icon border border-line"
-              title="Sign Out"
-              aria-label="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </header>
+        <button
+          onClick={handleLogout}
+          className="ct-btn ct-btn-icon h-10 w-10 border border-line bg-surface"
+          title="Sign Out"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
+      </AdminTopBar>
 
       {/* MAIN CONTAINER */}
-      <main className="mx-auto max-w-shell space-y-5 px-4 py-6 sm:py-8">
-        <div>
-          <h2 className="ct-display text-[24px]">
-            Boostov Connect Profiles{' '}
-            <span className="ct-num text-muted">({businesses.length})</span>
-          </h2>
-          <p className="ct-meta mt-1.5">
-            Manage NFC business profiles, custom links, and private merchant analytics.
-          </p>
-        </div>
+      <main className="mx-auto max-w-shell space-y-5 px-4 pb-12 pt-5 sm:space-y-6 sm:pt-8">
+        <section className="sh-hero sh-rise">
+          <span aria-hidden className="sh-arcs">
+            <span />
+            <span />
+            <span />
+          </span>
+          <div className="relative flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0 max-w-xl">
+              <h2 className="bc-display text-[26px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[34px]">
+                Boostov Connect Profiles{' '}
+                <span className="ct-num align-middle text-[0.62em] font-bold text-white/60">
+                  ({businesses.length})
+                </span>
+              </h2>
+              <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/70">
+                Manage NFC business profiles, custom links, and private merchant analytics.
+              </p>
+            </div>
+            <ThemeToggle variant="onCover" className="sm:hidden" />
+          </div>
+        </section>
 
         {error && (
           <div
             role="alert"
-            className="rounded-card border border-danger-border bg-danger-soft px-4 py-3 text-[13px] font-medium text-danger"
+            className="flex items-start gap-3 rounded-[18px] border border-danger-border bg-danger-soft px-4 py-3.5 text-[13px] font-medium text-danger"
           >
+            <AlertCircle className="mt-px h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
         {!error && businesses.length === 0 ? (
-          <div className="ct-card space-y-3 p-10 text-center">
-            <div className="ct-tile mx-auto h-12 w-12 bg-brand-soft text-brand-text">
-              <Sparkles className="h-6 w-6" strokeWidth={2} />
+          <div className="sh-rise ct-card px-8 pb-10 pt-12 text-center">
+            <div className="relative mx-auto grid h-24 w-24 place-items-center">
+              <span aria-hidden className="absolute inset-0 rounded-[28px] border-2 border-dashed border-line-strong" />
+              <span className="sh-head-icon h-14 w-14 rounded-[18px]">
+                <Sparkles className="h-6 w-6" strokeWidth={2} />
+              </span>
             </div>
-            <h3 className="ct-title">No Connect profiles added yet</h3>
-            <p className="ct-meta">Create your first digital NFC business card profile.</p>
-            <Link
-              href="/admin/connect/new"
-              className="ct-btn ct-btn-md mx-auto mt-2 bg-brand text-on-brand hover:bg-brand-hover"
-            >
-              <Plus className="h-4 w-4" /> Add Connect Business
+            <h3 className="ct-display mt-6 text-[22px]">No Connect profiles added yet</h3>
+            <p className="mx-auto mt-2 max-w-[34ch] text-[14px] text-muted">
+              Create your first digital NFC business card profile.
+            </p>
+            <Link href="/admin/connect/new" className="sh-btn-primary mx-auto mt-6 h-11 w-fit px-5">
+              <Plus className="h-4 w-4" strokeWidth={2.5} /> Add Connect Business
             </Link>
           </div>
         ) : !error ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {businesses.map((b) => {
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {businesses.map((b, index) => {
               const publicNfcUrl = typeof window !== 'undefined'
                 ? `${window.location.origin}/connect/${b.slug}`
                 : `/connect/${b.slug}`;
@@ -189,21 +195,24 @@ export default function AdminDashboardPage() {
               return (
                 <div
                   key={b.id}
-                  className={cn(
-                    'ct-card flex flex-col justify-between gap-4 p-5 transition-shadow duration-150 hover:shadow-md',
-                    !b.is_active && 'bg-surface-2'
-                  )}
+                  style={
+                    {
+                      '--biz': b.theme_color || 'var(--bx-blue)',
+                      '--d': `${Math.min(index, 6) * 60}ms`,
+                    } as React.CSSProperties
+                  }
+                  className={cn('sh-biz sh-rise', !b.is_active && 'sh-biz-off')}
                 >
                   {/* HEADER ROW */}
                   <div className="flex items-start justify-between gap-3">
-                    <Link href={`/admin/connect/${b.id}`} className="flex min-w-0 items-center gap-3">
+                    <Link href={`/admin/connect/${b.id}`} className="group flex min-w-0 items-center gap-3">
                       <ConnectLogoAvatar name={b.name} logoUrl={b.logo_url} size="md" />
 
                       <div className="min-w-0">
-                        <h3 className="truncate text-[15px] font-semibold leading-tight text-ink">
+                        <h3 className="bc-display truncate text-[16px] font-extrabold leading-tight tracking-[-0.02em] text-ink transition-colors group-hover:text-brand-text">
                           {b.name}
                         </h3>
-                        <p className="ct-num mt-0.5 truncate text-[11.5px] text-brand-text">
+                        <p className="ct-num mt-1 truncate text-[11.5px] text-muted">
                           /connect/{b.slug}
                         </p>
                       </div>
@@ -225,47 +234,41 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* STATS BADGES */}
-                  <div className="grid grid-cols-3 divide-x divide-line rounded-control border border-line bg-surface-2 text-center">
-                    <div className="px-2 py-2.5">
-                      <div className="ct-section-title flex items-center justify-center gap-1 text-[9.5px]">
+                  <div className="sh-stats">
+                    <div>
+                      <div className="sh-stat-label">
                         <Eye className="h-3 w-3" /> Views
                       </div>
-                      <div className="ct-num mt-1 text-[16px] font-semibold text-ink">
-                        {b.stats?.total_views || 0}
-                      </div>
+                      <div className="sh-stat-value ct-num">{b.stats?.total_views || 0}</div>
                     </div>
-                    <div className="px-2 py-2.5">
-                      <div className="ct-section-title flex items-center justify-center gap-1 text-[9.5px]">
+                    <div>
+                      <div className="sh-stat-label">
                         <MousePointer className="h-3 w-3" /> Clicks
                       </div>
-                      <div className="ct-num mt-1 text-[16px] font-semibold text-success">
-                        {b.stats?.total_clicks || 0}
-                      </div>
+                      <div className="sh-stat-value ct-num">{b.stats?.total_clicks || 0}</div>
                     </div>
-                    <div className="px-2 py-2.5">
-                      <div className="ct-section-title flex items-center justify-center gap-1 text-[9.5px]">
+                    <div>
+                      <div className="sh-stat-label">
                         <TrendingUp className="h-3 w-3" /> CTR %
                       </div>
-                      <div className="ct-num mt-1 text-[16px] font-semibold text-warning">
-                        {b.stats?.ctr || 0}%
-                      </div>
+                      <div className="sh-stat-value ct-num">{b.stats?.ctr || 0}%</div>
                     </div>
                   </div>
 
                   {/* TWO MANDATORY URL COPIERS */}
                   <div className="space-y-2">
                     {/* 1. PUBLIC NFC PROFILE URL */}
-                    <div className="flex items-center justify-between gap-2 rounded-control border border-line bg-surface-2 px-2.5 py-2">
+                    <div className="sh-url">
                       <div className="min-w-0">
-                        <span className="ct-label mb-0.5 block !text-[9.5px]">NFC Profile URL</span>
-                        <span className="ct-num block truncate text-[11.5px] text-muted">
+                        <span className="sh-url-label">NFC Profile URL</span>
+                        <span className="ct-num mt-0.5 block truncate text-[11.5px] text-ink-2">
                           {publicNfcUrl}
                         </span>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           onClick={() => handleCopy(publicNfcUrl, `pub_${b.id}`)}
-                          className="ct-btn ct-btn-icon h-8 w-8"
+                          className="ct-btn ct-btn-icon h-9 w-9 bg-surface"
                           title="Copy NFC URL"
                           aria-label="Copy NFC profile URL"
                         >
@@ -279,7 +282,7 @@ export default function AdminDashboardPage() {
                           href={`/connect/${b.slug}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="ct-btn ct-btn-icon h-8 w-8 text-brand-text"
+                          className="ct-btn ct-btn-icon h-9 w-9 bg-surface text-brand-text"
                           title="Open NFC Profile Page"
                           aria-label="Open NFC profile page"
                         >
@@ -289,17 +292,17 @@ export default function AdminDashboardPage() {
                     </div>
 
                     {/* 2. PRIVATE MERCHANT ANALYTICS DASHBOARD URL */}
-                    <div className="flex items-center justify-between gap-2 rounded-control border border-line bg-surface-2 px-2.5 py-2">
+                    <div className="sh-url">
                       <div className="min-w-0">
-                        <span className="ct-label mb-0.5 block !text-[9.5px]">Analytics URL</span>
-                        <span className="ct-num block truncate text-[11.5px] text-muted">
+                        <span className="sh-url-label">Analytics URL</span>
+                        <span className="ct-num mt-0.5 block truncate text-[11.5px] text-ink-2">
                           /connect/dashboard/{b.dashboard_token.substring(0, 8)}…
                         </span>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           onClick={() => handleCopy(merchantDashUrl, `dash_${b.id}`)}
-                          className="ct-btn ct-btn-icon h-8 w-8"
+                          className="ct-btn ct-btn-icon h-9 w-9 bg-surface"
                           title="Copy Analytics Dashboard URL"
                           aria-label="Copy analytics dashboard URL"
                         >
@@ -313,7 +316,7 @@ export default function AdminDashboardPage() {
                           href={`/connect/dashboard/${b.dashboard_token}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="ct-btn ct-btn-icon h-8 w-8"
+                          className="ct-btn ct-btn-icon h-9 w-9 bg-surface"
                           title="Open Analytics Dashboard"
                           aria-label="Open analytics dashboard"
                         >
@@ -324,11 +327,11 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* BOTTOM ACTIONS */}
-                  <div className="flex items-center justify-between gap-2 border-t border-line pt-4">
+                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-4">
                     <Link
                       href={`/connect/dashboard/${b.dashboard_token}`}
                       target="_blank"
-                      className="ct-btn ct-btn-sm ct-btn-quiet"
+                      className="ct-btn ct-btn-sm ct-btn-quiet h-10 px-4"
                     >
                       <BarChart2 className="h-3.5 w-3.5 text-brand-text" />
                       <span>View Analytics</span>
@@ -337,7 +340,7 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/connect/${b.id}`}
-                        className="ct-btn ct-btn-icon border border-line"
+                        className="ct-btn ct-btn-icon h-10 w-10 border border-line bg-surface"
                         title="Edit Connect Business"
                         aria-label="Edit connect business"
                       >
@@ -346,7 +349,7 @@ export default function AdminDashboardPage() {
 
                       <button
                         onClick={() => handleDelete(b)}
-                        className="ct-btn ct-btn-icon border border-danger-border bg-danger-soft text-danger"
+                        className="ct-btn ct-btn-icon h-10 w-10 border border-danger-border bg-danger-soft text-danger hover:bg-danger hover:text-white"
                         title="Delete Connect Business"
                         aria-label="Delete connect business"
                       >

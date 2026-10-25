@@ -1,14 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Bricolage_Grotesque } from 'next/font/google';
 import { APPEARANCE_INIT_SCRIPT } from '@/lib/connect-appearance';
-
-/* Display face for the public profile only: names, headings, the coupon. */
-const display = Bricolage_Grotesque({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['600', '700', '800'],
-  variable: '--font-display',
-  display: 'swap',
-});
 
 /* The tab title is the only visible place the old product name leaked onto
  * the public profile. */
@@ -30,9 +21,9 @@ export const viewport: Viewport = {
  */
 export default function PublicProfileLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={display.variable}>
+    <>
       <script dangerouslySetInnerHTML={{ __html: APPEARANCE_INIT_SCRIPT }} />
       {children}
-    </div>
+    </>
   );
 }

@@ -9,6 +9,7 @@ import ConnectAppearanceToggle from '@/components/ConnectAppearanceToggle';
 import ConnectLinkRow, { ConnectRowItem } from '@/components/ConnectLinkRow';
 import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
 import ConnectPlatformIcon from '@/components/ConnectPlatformIcon';
+import BoostovPoweredBy from '@/components/BoostovPoweredBy';
 import {
   WhatsAppIcon,
   MapsIcon,
@@ -31,15 +32,17 @@ export interface ConnectPublicCardProps {
   onTrack: (eventType: string, linkId?: string, metadata?: Record<string, unknown>) => void;
 }
 
-function SectionHeading({ label, index, meta }: { label: string; index: number; meta?: React.ReactNode }) {
+function SectionHeading({ label, index }: { label: string; index: number }) {
   return (
-    <h2 className="bc-heading">
+    <h2 className="mb-4 flex items-center gap-3">
       {/* Decorative running index; the label is what gets announced. */}
-      <span aria-hidden className="bc-heading-num">
+      <span aria-hidden className="bc-gal-index">
         {String(index).padStart(2, '0')}
       </span>
-      <span>{label}</span>
-      {meta}
+      <span className="bc-display min-w-0 text-[20px] font-extrabold leading-none tracking-[-0.025em] text-ink">
+        {label}
+      </span>
+      <span aria-hidden className="bc-heading-rule" />
     </h2>
   );
 }
@@ -85,7 +88,7 @@ function actionIcon(action: ConnectActionDefinition, className: string): React.R
 export default function ConnectPublicCard({ business, links, onTrack }: ConnectPublicCardProps) {
   const appearance = useConnectAppearance();
 
-  /* Pointer tilt for the floating plate. Writes two custom properties on one
+  /* Pointer tilt for the floating logo. Writes two custom properties on one
    * node per frame; nothing re-renders. Skipped under reduced motion. */
   const tiltRef = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
@@ -250,7 +253,7 @@ export default function ConnectPublicCard({ business, links, onTrack }: ConnectP
       </div>
 
       <div className="bc-card flex w-full max-w-card flex-col bg-surface">
-        {/* ---------------- HERO: the tapped card, materialised ---------------- */}
+        {/* ---------------- HERO: the floating logo ---------------- */}
         <header className="bc-hero" onPointerMove={handleTilt} onPointerLeave={resetTilt}>
           <div className="bc-hero-media">
             {business.cover_image_url ? (
@@ -274,32 +277,28 @@ export default function ConnectPublicCard({ business, links, onTrack }: ConnectP
             </div>
           </div>
 
-          <div className="bc-plate-stage">
-            <span aria-hidden className="bc-plate-shadow" />
-            <div className="bc-plate-float">
-              <div ref={tiltRef} className="bc-plate-tilt">
-                <div className="bc-plate">
-                  <span aria-hidden className="bc-plate-sheen" />
-                  <span aria-hidden className="bc-plate-chip" />
-                  <span aria-hidden className="bc-plate-lines">
-                    <span />
-                    <span />
-                  </span>
-                  <svg aria-hidden viewBox="0 0 24 24" fill="none" className="bc-plate-nfc">
-                    <path d="M6 9.5a4 4 0 0 1 0 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M10 7a8 8 0 0 1 0 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M14 4.5a12 12 0 0 1 0 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                  {/* The plate carries the logo through the shared circular
-                   * component, with the separating ring it needs over colour. */}
+          <div className="bc-orb-stage">
+            <span aria-hidden className="bc-orb-shadow" />
+            <div className="bc-orb-float">
+              <div ref={tiltRef} className="bc-orb-tilt">
+                <div className="bc-orb">
+                  <span aria-hidden className="bc-orb-glow" />
+                  <span aria-hidden className="bc-orb-pulse" />
+                  <span aria-hidden className="bc-orb-pulse" />
+                  <span aria-hidden className="bc-orb-ring" />
+                  {/* The logo goes through the shared circular component: its
+                   * mask crops any upload to a circle and `contain` keeps wide,
+                   * tall or transparent marks undistorted inside it. */}
                   <ConnectLogoAvatar
                     name={business.name}
                     logoUrl={business.logo_url}
                     size="lg"
                     ring="floating"
                     fallbackTone="accent"
-                    className="bc-plate-logo h-[88px] w-[88px]"
+                    className="bc-orb-logo h-[128px] w-[128px]"
+                    imageClassName="p-3.5"
                   />
+                  <span aria-hidden className="bc-orb-gloss" />
                 </div>
               </div>
             </div>
@@ -439,22 +438,10 @@ export default function ConnectPublicCard({ business, links, onTrack }: ConnectP
             </div>
           )}
 
-          {/* ---------------- BOOSTOV FOOTER ---------------- */}
-          <footer className="mt-auto px-5 pb-[calc(24px+var(--bc-safe-bottom))] pt-12 text-center">
-            <p className="text-[11.5px] leading-relaxed text-muted">
-              Create your free digital card at{' '}
-              <a
-                href="https://boostov.com"
-                target="_blank"
-                rel="noreferrer"
-                className={cn(
-                  'font-bold text-brand-text underline decoration-brand-soft-border decoration-2',
-                  'underline-offset-4 transition-colors hover:decoration-brand'
-                )}
-              >
-                Boostov
-              </a>
-            </p>
+          {/* ---------------- BOOSTOV FOOTER ----------------
+           * The same "Powered by boostov.ma" line as the Grow pages. */}
+          <footer className="mt-auto flex justify-center px-5 pb-[calc(20px+var(--bc-safe-bottom))] pt-12">
+            <BoostovPoweredBy />
           </footer>
         </div>
       </div>

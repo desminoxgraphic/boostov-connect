@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Lock, Loader2 } from 'lucide-react';
 
@@ -69,17 +70,25 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <div className="ct-tile mx-auto mb-4 h-14 w-14 bg-brand-soft text-brand-text">
-            <Lock className="h-6 w-6" strokeWidth={2} />
+    <div className="sh-page relative flex min-h-dvh items-center justify-center overflow-hidden p-4">
+      <span aria-hidden className="sh-login-orbit">
+        <span />
+        <span />
+        <span />
+      </span>
+      <div className="sh-rise relative w-full max-w-sm">
+        <div className="mb-7 text-center">
+          <div className="sh-brand-mark mx-auto h-16 w-16 rounded-[22px]">
+            <Image src="/boostov-logo.png" alt="" width={46} height={46} priority />
           </div>
-          <h1 className="ct-display text-[24px]">CARDIFY Admin</h1>
-          <p className="ct-meta mt-1.5">Management Portal</p>
+          <h1 className="ct-display mt-5 text-[28px]">Boostov Admin</h1>
+          <p className="mt-1.5 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted">
+            <Lock className="h-3.5 w-3.5" strokeWidth={2.25} />
+            Management Portal
+          </p>
         </div>
 
-        <form onSubmit={handleLogin} className="ct-card space-y-4 p-6">
+        <form onSubmit={handleLogin} className="ct-card space-y-4 p-6 shadow-lg sm:p-7">
           <div>
             <label className="ct-label" htmlFor="admin-password">
               Admin Password
@@ -99,17 +108,13 @@ export default function AdminLoginPage() {
           {error && (
             <div
               role="alert"
-              className="rounded-control border border-danger-border bg-danger-soft px-3.5 py-2.5 text-center text-[12.5px] font-medium text-danger"
+              className="rounded-[14px] border border-danger-border bg-danger-soft px-3.5 py-2.5 text-center text-[12.5px] font-medium text-danger"
             >
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="ct-btn ct-btn-md w-full bg-brand text-on-brand shadow-sm hover:bg-brand-hover"
-          >
+          <button type="submit" disabled={loading} className="sh-save h-12">
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />

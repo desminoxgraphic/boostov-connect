@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import Image from 'next/image';
 import { ConnectBusiness, ConnectLink, ConnectAnalyticsSummary, ConnectActionStat } from '@/lib/connect-types';
 import ConnectPlatformIcon from '@/components/ConnectPlatformIcon';
+import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useCountUp } from '@/lib/use-count-up';
 import {
   WhatsAppIcon,
   MapsIcon,
@@ -22,7 +23,6 @@ import {
   ExternalLink,
   Images,
   Link2,
-  Loader2,
   RefreshCw,
   AlertCircle,
   Clock,
@@ -62,41 +62,86 @@ function ActionIcon({ stat }: { stat: ConnectActionStat }) {
   }
 }
 
-type Tone = 'brand' | 'success' | 'warning' | 'info';
+/** Animated figure. Counts up to the real value once; never shows anything else. */
+function Figure({ value, suffix = '' }: { value: number; suffix?: string }) {
+  const shown = useCountUp(value);
+  return (
+    <span className="ct-num">
+      {shown}
+      {suffix}
+    </span>
+  );
+}
 
-const TONE_CHIP: Record<Tone, string> = {
-  brand: 'bg-brand-soft text-brand-text',
-  success: 'bg-success-soft text-success',
-  warning: 'bg-warning-soft text-warning',
-  info: 'bg-info-soft text-info',
-};
+type Tone = 'sky' | 'mint' | 'amber' | 'violet';
 
 function StatCard({
   label,
   value,
+  suffix,
   caption,
   icon,
   tone,
+  featured = false,
+  className,
+  style,
+  badge,
 }: {
   label: string;
-  value: string | number;
+  value: number;
+  suffix?: string;
   caption: string;
   icon: React.ReactNode;
   tone: Tone;
+  featured?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  /** Replaces the icon tile, e.g. the CTR ring. */
+  badge?: React.ReactNode;
 }) {
   return (
-    <div className="ct-card flex flex-col gap-3 p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-2">
-        <span className="ct-section-title pt-0.5">{label}</span>
-        <span className={cn('ct-tile h-8 w-8', TONE_CHIP[tone])}>{icon}</span>
+    <div
+      style={style}
+      className={cn('sh-kpi sh-rise', featured ? 'sh-kpi-featured' : `sh-kpi-${tone}`, className)}
+    >
+      {featured && (
+        <span aria-hidden className="sh-arcs">
+          <span />
+          <span />
+          <span />
+        </span>
+      )}
+      <div className="relative flex items-start justify-between gap-2">
+        <span className="sh-kpi-label">{label}</span>
+        {badge ?? <span className="sh-kpi-icon">{icon}</span>}
       </div>
-      <div>
-        <div className="ct-num text-[28px] font-semibold leading-none text-ink sm:text-[32px]">
-          {value}
+      <div className="relative mt-auto min-w-0">
+        <div className="sh-kpi-value">
+          <Figure value={value} suffix={suffix} />
         </div>
-        <p className="ct-meta mt-2 text-[11.5px]">{caption}</p>
+        <p className="sh-kpi-caption">{caption}</p>
       </div>
     </div>
+  );
+}
+
+/** Click-through rate drawn as a ring. The arc is the real percentage, capped at the full circle. */
+function RateRing({ value }: { value: number }) {
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const fraction = Math.max(0, Math.min(value, 100)) / 100;
+  return (
+    <svg aria-hidden viewBox="0 0 56 56" className="sh-ring -mr-1 -mt-1 h-11 w-11 shrink-0 -rotate-90">
+      <circle cx="28" cy="28" r={radius} className="sh-ring-track" />
+      <circle
+        cx="28"
+        cy="28"
+        r={radius}
+        className="sh-ring-fill"
+        strokeDasharray={circumference}
+        style={{ '--ring-off': `${circumference * (1 - fraction)}`, '--ring-len': `${circumference}` } as React.CSSProperties}
+      />
+    </svg>
   );
 }
 
@@ -144,24 +189,44 @@ export default function MerchantAnalyticsDashboardPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-canvas">
-        <div className="flex flex-col items-center gap-3 text-muted">
-          <Loader2 className="h-7 w-7 animate-spin text-brand" />
-          <span className="text-[13px]">Loading merchant dashboard…</span>
+      <div className="sh-page min-h-dvh" aria-busy="true">
+        <span className="sr-only">Loading merchant dashboard…</span>
+        <div className="sh-bar">
+          <div className="mx-auto flex max-w-shell items-center gap-3 px-4 py-3">
+            <div className="sh-skel h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <div className="sh-skel h-4 w-40 rounded-full" />
+              <div className="sh-skel h-3 w-24 rounded-full" />
+            </div>
+          </div>
         </div>
+        <main className="mx-auto max-w-shell space-y-4 px-4 py-6 sm:py-8">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+            <div className="sh-skel col-span-2 h-[150px] rounded-[24px] lg:col-span-1" />
+            <div className="sh-skel h-[150px] rounded-[24px]" />
+            <div className="sh-skel h-[150px] rounded-[24px]" />
+            <div className="sh-skel col-span-2 h-[150px] rounded-[24px] lg:col-span-1" />
+          </div>
+          <div className="sh-skel h-[320px] rounded-[24px]" />
+        </main>
       </div>
     );
   }
 
   if (error || !business || !summary) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-canvas p-4">
-        <div className="ct-card max-w-md w-full space-y-3 p-8 text-center">
-          <div className="ct-tile mx-auto h-12 w-12 bg-danger-soft text-danger">
-            <AlertCircle className="h-6 w-6" strokeWidth={2} />
+      <div className="sh-page flex min-h-dvh items-center justify-center p-5">
+        <div className="sh-rise ct-card w-full max-w-md px-8 pb-9 pt-10 text-center">
+          <div className="relative mx-auto grid h-20 w-20 place-items-center">
+            <span aria-hidden className="absolute inset-0 rounded-[24px] border-2 border-dashed border-danger-border" />
+            <span className="grid h-12 w-12 place-items-center rounded-[16px] bg-danger-soft text-danger">
+              <AlertCircle className="h-6 w-6" strokeWidth={2.25} />
+            </span>
           </div>
-          <h2 className="ct-title text-[20px]">Access Error</h2>
-          <p className="ct-meta">{error || 'Unable to access merchant dashboard.'}</p>
+          <h2 className="ct-display mt-6 text-[24px]">Access Error</h2>
+          <p className="mx-auto mt-2 max-w-[32ch] text-[14px] leading-relaxed text-muted">
+            {error || 'Unable to access merchant dashboard.'}
+          </p>
         </div>
       </div>
     );
@@ -180,35 +245,19 @@ export default function MerchantAnalyticsDashboardPage({ params }: PageProps) {
   const activeLinkCount = links.filter((link) => link.is_active !== false).length;
 
   return (
-    <div className="min-h-dvh bg-canvas text-ink">
-      <header className="sticky top-0 z-20 border-b border-line bg-glass backdrop-blur-md">
+    <div className="sh-page min-h-dvh text-ink">
+      <header className="sh-bar sticky top-0 z-20">
         <div className="mx-auto flex max-w-shell items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-control border border-line bg-surface-2">
-              {business.logo_url ? (
-                <Image
-                  src={business.logo_url}
-                  alt={business.name}
-                  width={40}
-                  height={40}
-                  className="h-full w-full rounded-[10px] object-contain"
-                />
-              ) : (
-                <span className="bg-brand text-[15px] font-semibold text-on-brand">
-                  {business.name.charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
+            <ConnectLogoAvatar name={business.name} logoUrl={business.logo_url} size="md" fallbackTone="accent" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="truncate text-[15px] font-semibold leading-tight text-ink">
+                <h1 className="bc-display line-clamp-2 text-[16px] font-extrabold leading-[1.15] tracking-[-0.02em] text-ink sm:line-clamp-1">
                   {business.name}
                 </h1>
-                <span className="ct-chip hidden shrink-0 bg-brand-soft text-[10px] uppercase tracking-[0.08em] text-brand-text sm:inline-flex">
-                  Boostov Connect
-                </span>
+                <span className="sh-pill hidden shrink-0 sm:inline-flex">Boostov Connect</span>
               </div>
-              <p className="truncate text-[12px] text-muted">Merchant Analytics</p>
+              <p className="truncate text-[12px] font-medium text-muted">Merchant Analytics</p>
             </div>
           </div>
 
@@ -217,18 +266,13 @@ export default function MerchantAnalyticsDashboardPage({ params }: PageProps) {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="ct-btn ct-btn-icon border border-line"
+              className="ct-btn ct-btn-icon h-10 w-10 border border-line bg-surface"
               title="Refresh Data"
               aria-label="Refresh data"
             >
               <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
             </button>
-            <a
-              href={profileUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="ct-btn ct-btn-sm bg-brand text-on-brand hover:bg-brand-hover"
-            >
+            <a href={profileUrl} target="_blank" rel="noreferrer" className="sh-btn-primary sh-btn-dock">
               <span>View Profile</span>
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -236,7 +280,7 @@ export default function MerchantAnalyticsDashboardPage({ params }: PageProps) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-shell space-y-5 px-4 py-6 sm:py-8">
+      <main className="mx-auto max-w-shell space-y-4 px-4 pb-28 pt-5 sm:space-y-5 sm:pb-10 sm:pt-8">
         {/* ---------------- TOP STATS ---------------- */}
         <section aria-label="Top statistics">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -244,132 +288,164 @@ export default function MerchantAnalyticsDashboardPage({ params }: PageProps) {
               label="Profile Views"
               value={summary.total_views}
               caption="NFC taps & profile visits"
-              tone="brand"
+              tone="sky"
+              featured
+              className="col-span-2 lg:col-span-1"
               icon={<Eye className="h-4 w-4" />}
             />
             <StatCard
               label="Total Clicks"
               value={summary.total_clicks}
               caption="Every action a visitor took"
-              tone="success"
+              tone="mint"
+              style={{ '--d': '70ms' } as React.CSSProperties}
               icon={<MousePointerClick className="h-4 w-4" />}
             />
             <StatCard
               label="Click-Through Rate"
-              value={`${summary.ctr}%`}
+              value={summary.ctr}
+              suffix="%"
               caption="Clicks per profile view"
-              tone="warning"
+              tone="amber"
+              style={{ '--d': '140ms' } as React.CSSProperties}
               icon={<TrendingUp className="h-4 w-4" />}
+              badge={<RateRing value={summary.ctr} />}
             />
             <StatCard
               label="Saved Contacts"
               value={summary.saved_contacts}
               caption="Contact cards saved"
-              tone="info"
+              tone="violet"
+              className="col-span-2 lg:col-span-1"
+              style={{ '--d': '210ms' } as React.CSSProperties}
               icon={<UserPlus className="h-4 w-4" />}
             />
           </div>
         </section>
 
-        {/* ---------------- LINK & ACTION PERFORMANCE ----------------
-         * One unified list. Contact rows, socials, custom links, the gallery and
-         * Save Contact are all actions on the same profile, so they are all
-         * measured together instead of being split across separate sections. */}
-        <section aria-label="Link and action performance" className="ct-card p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="ct-tile h-8 w-8 bg-brand-soft text-brand-text">
-                <Link2 className="h-4 w-4" strokeWidth={2} />
+        <div className="grid items-start gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+          {/* ---------------- LINK & ACTION PERFORMANCE ----------------
+           * One unified list. Contact rows, socials, custom links, the gallery and
+           * Save Contact are all actions on the same profile, so they are all
+           * measured together instead of being split across separate sections. */}
+          <section
+            aria-label="Link and action performance"
+            className="sh-rise ct-card overflow-hidden"
+            style={{ '--d': '260ms' } as React.CSSProperties}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line px-5 py-4 sm:px-6">
+              <div className="flex items-center gap-3">
+                <span className="sh-head-icon">
+                  <Link2 className="h-4 w-4" strokeWidth={2.25} />
+                </span>
+                <h2 className="ct-title">Link Performance</h2>
+              </div>
+              <span className="ct-num text-[12px] text-muted">
+                {rows.length} action{rows.length === 1 ? '' : 's'} on your profile
+                {activeLinkCount > 0 ? ` · ${activeLinkCount} link${activeLinkCount === 1 ? '' : 's'}` : ''}
               </span>
-              <h2 className="ct-title">Link Performance</h2>
             </div>
-            <span className="ct-num text-[12px] text-muted">
-              {rows.length} action{rows.length === 1 ? '' : 's'} on your profile
-              {activeLinkCount > 0 ? ` · ${activeLinkCount} link${activeLinkCount === 1 ? '' : 's'}` : ''}
-            </span>
-          </div>
 
-          {rows.length === 0 ? (
-            <p className="py-12 text-center text-[12.5px] text-muted">
-              No actions are configured on this profile yet.
-            </p>
-          ) : (
-            <ul className="mt-5 space-y-4">
-              {rows.map((row) => {
-                // Bars are scaled against the best performer so the leader is
-                // always full width, while the printed percentage stays the
-                // honest share of all clicks.
-                const width = maxClicks > 0 ? (row.clicks / maxClicks) * 100 : 0;
-                return (
-                  <li key={row.key} className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="ct-tile h-9 w-9 bg-surface-2 text-ink-2">
+            {rows.length === 0 ? (
+              <div className="sh-empty">
+                <span className="sh-empty-icon">
+                  <Link2 className="h-5 w-5" strokeWidth={2.25} />
+                </span>
+                <p>No actions are configured on this profile yet.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-line">
+                {rows.map((row, index) => {
+                  // Bars are scaled against the best performer so the leader is
+                  // always full width, while the printed percentage stays the
+                  // honest share of all clicks.
+                  const width = maxClicks > 0 ? (row.clicks / maxClicks) * 100 : 0;
+                  const leader = maxClicks > 0 && row.clicks === maxClicks;
+                  return (
+                    <li key={row.key} className="sh-perf-row">
+                      <span className={cn('sh-perf-icon', leader && 'sh-perf-icon-lead')}>
                         <ActionIcon stat={row} />
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">
-                        {row.label}
-                      </span>
-                      <span className="ct-num shrink-0 text-[13px] font-semibold text-ink">
-                        {row.clicks}
-                        <span className="ml-1 font-sans text-[11px] font-medium text-muted">
-                          click{row.clicks === 1 ? '' : 's'}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
-                        <div
-                          className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out"
-                          style={{ width: `${width}%` }}
-                        />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="truncate text-[14px] font-semibold text-ink">{row.label}</span>
+                          <span className="ct-num shrink-0 text-[14px] font-bold text-ink">
+                            {row.clicks}
+                            <span className="ml-1 font-sans text-[11.5px] font-medium text-muted">
+                              click{row.clicks === 1 ? '' : 's'}
+                            </span>
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="sh-track">
+                            <div
+                              className={cn('sh-fill', leader && 'sh-fill-lead')}
+                              style={{ width: `${width}%`, '--d': `${Math.min(index, 8) * 60}ms` } as React.CSSProperties}
+                            />
+                          </div>
+                          <span className="ct-num w-12 shrink-0 text-right text-[11.5px] font-semibold text-muted">
+                            {row.percent}%
+                          </span>
+                        </div>
                       </div>
-                      <span className="ct-num w-11 shrink-0 text-right text-[11px] text-muted">
-                        {row.percent}%
-                      </span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        {/* ---------------- RECENT ACTIVITY ---------------- */}
-        <section aria-label="Recent activity" className="ct-card p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="ct-tile h-8 w-8 bg-brand-soft text-brand-text">
-                <Clock className="h-4 w-4" strokeWidth={2} />
-              </span>
-              <h2 className="ct-title">Recent Activity</h2>
+          {/* ---------------- RECENT ACTIVITY ---------------- */}
+          <section
+            aria-label="Recent activity"
+            className="sh-rise ct-card overflow-hidden"
+            style={{ '--d': '320ms' } as React.CSSProperties}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4 sm:px-6">
+              <div className="flex items-center gap-3">
+                <span className="sh-head-icon">
+                  <Clock className="h-4 w-4" strokeWidth={2.25} />
+                </span>
+                <h2 className="ct-title">Recent Activity</h2>
+              </div>
+              <span className="ct-num text-[12px] text-muted">Last 15 interactions</span>
             </div>
-            <span className="ct-num text-[12px] text-muted">Last 15 interactions</span>
-          </div>
 
-          {summary.recent_activity.length === 0 ? (
-            <p className="py-12 text-center text-[12.5px] leading-relaxed text-muted">
-              No activity recorded yet. Tap the physical NFC card or share your profile to see
-              real-time events here.
-            </p>
-          ) : (
-            <ul className="mt-4 divide-y divide-line">
-              {summary.recent_activity.map((act) => (
-                <li key={act.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
-                    <span className="truncate text-[13px] font-medium text-ink">{act.title}</span>
-                  </div>
-                  <span className="ct-num shrink-0 text-[11.5px] text-muted">
-                    {new Date(act.created_at).toLocaleString([], {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+            {summary.recent_activity.length === 0 ? (
+              <div className="sh-empty">
+                <span className="sh-empty-icon">
+                  <Clock className="h-5 w-5" strokeWidth={2.25} />
+                </span>
+                <p>
+                  No activity recorded yet. Tap the physical NFC card or share your profile to see
+                  real-time events here.
+                </p>
+              </div>
+            ) : (
+              <ol className="sh-timeline px-5 py-3 sm:px-6">
+                {summary.recent_activity.map((act) => (
+                  <li key={act.id} className="sh-timeline-item">
+                    <span aria-hidden className="sh-timeline-dot" />
+                    <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink">
+                      {act.title}
+                    </span>
+                    <span className="ct-num shrink-0 text-[11.5px] text-muted">
+                      {new Date(act.created_at).toLocaleString([], {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
+
+        {/* On phones the appearance control lives here, out of the crowded top bar. */}
+        <div className="flex justify-center pt-2 sm:hidden">
+          <ThemeToggle />
+        </div>
       </main>
     </div>
   );

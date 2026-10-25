@@ -48,13 +48,13 @@ export default function ConnectAppearanceToggle({ preference, onChange, ready, c
             title={`${label} appearance`}
             onClick={() => onChange(value)}
             className={cn(
-              'inline-flex h-7 w-7 items-center justify-center rounded-full transition-all duration-150 active:scale-90',
+              'inline-flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 active:scale-90',
               selected
                 ? 'bg-white text-[#0B1220] shadow-xs'
                 : 'text-white/80 hover:bg-white/20 hover:text-white'
             )}
           >
-            <Icon className="h-[14px] w-[14px]" strokeWidth={2} />
+            <Icon className="h-[15px] w-[15px]" strokeWidth={2} />
           </button>
         );
       })}

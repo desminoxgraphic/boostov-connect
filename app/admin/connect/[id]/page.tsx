@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import AdminTopBar from '@/components/AdminTopBar';
 import { ConnectBusiness } from '@/lib/connect-types';
 import ConnectGalleryManager from '@/components/ConnectGalleryManager';
 import ConnectCustomizationFields, {
@@ -299,8 +300,8 @@ export default function EditConnectBusinessPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-muted">
+      <div className="sh-page flex min-h-dvh items-center justify-center">
+        <div className="sh-rise flex flex-col items-center gap-3 text-muted">
           <Loader2 className="h-7 w-7 animate-spin text-brand" />
           <span className="text-[13px]">Loading profile details...</span>
         </div>
@@ -309,28 +310,31 @@ export default function EditConnectBusinessPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-dvh pb-14">
-      <header className="sticky top-0 z-20 border-b border-line bg-glass backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
+    <div className="sh-page min-h-dvh">
+      <AdminTopBar
+        narrow
+        title="Edit Connect Profile"
+        subtitle="Boostov Connect"
+        leading={
           <Link
             href="/admin"
-            className="ct-btn ct-btn-sm ct-btn-quiet"
+            className="ct-btn ct-btn-icon h-10 w-10 border border-line bg-surface"
+            title="Back to Admin"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Admin
+            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only">Back to Admin</span>
           </Link>
-          <div className="flex min-w-0 items-center gap-2">
-            <Sparkles className="h-4 w-4 shrink-0 text-brand-text" />
-            <h1 className="truncate text-[15px] font-semibold text-ink">Edit Connect Profile</h1>
-          </div>
-        </div>
-      </header>
+        }
+      >
+        <Sparkles className="hidden h-4 w-4 text-brand-text sm:block" aria-hidden />
+      </AdminTopBar>
 
-      <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <main className="mx-auto max-w-3xl px-4 pt-6 sm:pb-10 sm:pt-8">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           {error && (
             <div
               role="alert"
-              className="rounded-card border border-danger-border bg-danger-soft px-4 py-3 text-[13px] font-medium break-words text-danger"
+              className="rounded-[18px] border border-danger-border bg-danger-soft px-4 py-3.5 text-[13px] font-medium break-words text-danger"
             >
               {error}
             </div>
@@ -397,7 +401,7 @@ export default function EditConnectBusinessPage({ params }: PageProps) {
               <div className="space-y-3">
                 <label className="ct-label">Logo Image</label>
                 {logoUrl ? (
-                  <div className="ct-tile relative h-24 w-24 overflow-hidden border border-line bg-surface-2">
+                  <div className="relative h-24 w-24 overflow-hidden rounded-[9999px] border border-line bg-white shadow-sm">
                     <Image src={logoUrl} alt="Logo" fill className="object-contain p-1.5" />
                   </div>
                 ) : null}
@@ -426,7 +430,7 @@ export default function EditConnectBusinessPage({ params }: PageProps) {
               <div className="space-y-3">
                 <label className="ct-label">Cover Banner Image</label>
                 {coverImageUrl ? (
-                  <div className="relative h-24 w-full overflow-hidden rounded-card border border-line bg-surface-2">
+                  <div className="relative h-28 w-full overflow-hidden rounded-[18px] border border-line bg-surface-2 shadow-sm">
                     <Image src={coverImageUrl} alt="Cover" fill className="object-cover" />
                   </div>
                 ) : null}
@@ -519,20 +523,18 @@ export default function EditConnectBusinessPage({ params }: PageProps) {
             </label>
           </section>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="ct-btn ct-btn-lg w-full bg-ink text-canvas hover:bg-ink-2 disabled:opacity-50"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Saving Profile Changes...</span>
-              </>
-            ) : (
-              <span>Save Profile Changes</span>
-            )}
-          </button>
+          <div className="sh-savebar">
+            <button type="submit" disabled={submitting} className="sh-save">
+              {submitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Saving Profile Changes...</span>
+                </>
+              ) : (
+                <span>Save Profile Changes</span>
+              )}
+            </button>
+          </div>
         </form>
       </main>
     </div>

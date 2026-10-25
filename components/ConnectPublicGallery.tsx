@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Images, Expand } from 'lucide-react';
+import { Expand } from 'lucide-react';
 import ConnectLightbox from '@/components/ConnectLightbox';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,37 @@ interface ConnectPublicGalleryProps {
 
 /** Above this many photos a 2x2 grid gets cramped, so we switch to a carousel. */
 const GRID_THRESHOLD = 4;
+
+/**
+ * Editorial layout per photo count. Presentation only: every tile is the same
+ * button opening the same lightbox at the same index.
+ *  1 -> one wide frame
+ *  2 -> two portrait frames
+ *  3 -> tall lead + two stacked
+ *  4 -> wide lead + three below
+ */
+function gridFor(count: number): { grid: string; tile: (index: number) => string; sizes: (index: number) => string } {
+  const half = '(max-width: 480px) 45vw, 210px';
+  const full = '(max-width: 480px) 90vw, 420px';
+  switch (count) {
+    case 1:
+      return { grid: 'grid-cols-1', tile: () => 'aspect-[4/3]', sizes: () => full };
+    case 2:
+      return { grid: 'grid-cols-2', tile: () => 'aspect-[4/5]', sizes: () => half };
+    case 3:
+      return {
+        grid: 'grid-cols-2 grid-rows-2 aspect-[1/1]',
+        tile: (i) => (i === 0 ? 'row-span-2 h-full' : 'h-full'),
+        sizes: () => half,
+      };
+    default:
+      return {
+        grid: 'grid-cols-3',
+        tile: (i) => (i === 0 ? 'col-span-3 aspect-[16/10]' : 'aspect-square'),
+        sizes: (i) => (i === 0 ? full : '(max-width: 480px) 30vw, 140px'),
+      };
+  }
+}
 
 export default function ConnectPublicGallery({
   images,
@@ -38,6 +69,34 @@ export default function ConnectPublicGallery({
   }, [images, featuredUrl]);
 
   const useCarousel = ordered.length > GRID_THRESHOLD;
+
+  /* Reveal the tiles once the section scrolls into view. Opacity and the
+   * `translate` property only, so it never fights the hover `transform`.
+   * Without IntersectionObserver, or under reduced motion, it is simply shown. */
+  const sectionRef = useRef<HTMLElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    if (
+      typeof IntersectionObserver === 'undefined' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      setShown(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShown(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0.05 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [ordered.length]);
 
   const open = useCallback(
     (index: number) => {
@@ -68,102 +127,97 @@ export default function ConnectPublicGallery({
 
   if (ordered.length === 0) return null;
 
+  const markLoaded = (url: string) => setLoaded((prev) => ({ ...prev, [url]: true }));
+
+  const featuredChip = (
+    <span className="bc-gal-featured">Featured</span>
+  );
+
+  const tileBody = (url: string, index: number, sizes: string) => (
+    <>
+      <Image
+        src={url}
+        alt={`${businessName} photo ${index + 1}`}
+        fill
+        sizes={sizes}
+        className={cn('object-cover', loaded[url] ? 'opacity-100' : 'opacity-0')}
+        onLoad={() => markLoaded(url)}
+        onError={() => markLoaded(url)}
+      />
+      <span aria-hidden className="bc-gal-scrim" />
+      <span aria-hidden className="bc-gal-expand">
+        <Expand className="h-3.5 w-3.5" strokeWidth={2.25} />
+      </span>
+      {featuredUrl === url && (index === 0 || !useCarousel) && featuredChip}
+    </>
+  );
+
+  const layout = gridFor(ordered.length);
+
   return (
-    <section aria-label="Photo catalogue" className="bc-in pt-10">
-      {/* Section header */}
-      <div className="px-5">
-        <h2 className="bc-heading">
+    <section
+      ref={sectionRef}
+      aria-label="Photo catalogue"
+      className="bc-gal pt-10"
+      data-shown={shown ? '' : undefined}
+    >
+      {/* ---------------- Header ---------------- */}
+      <div className="mb-4 flex items-end justify-between gap-3 px-5">
+        <h2 className="flex min-w-0 items-center gap-3">
           {sectionIndex ? (
-            <span aria-hidden className="bc-heading-num">
+            <span aria-hidden className="bc-gal-index">
               {String(sectionIndex).padStart(2, '0')}
             </span>
-          ) : (
-            <Images aria-hidden className="h-4 w-4 self-center text-brand-text" strokeWidth={2.25} />
-          )}
-          <span>Gallery</span>
-          <span className="bc-heading-meta ct-num normal-case">
-            {ordered.length} photo{ordered.length === 1 ? '' : 's'}
+          ) : null}
+          <span className="min-w-0">
+            <span className="block text-[10.5px] font-bold uppercase leading-none tracking-[0.18em] text-muted">
+              Gallery
+            </span>
+            <span className="bc-display mt-1.5 block text-[20px] font-extrabold leading-none tracking-[-0.025em] text-ink">
+              <span className="ct-num">{ordered.length}</span> photo{ordered.length === 1 ? '' : 's'}
+            </span>
           </span>
         </h2>
         {useCarousel && (
-          <p className="-mt-1.5 mb-3 flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-brand-text">
-            <span aria-hidden className="h-[2px] w-5 rounded-[2px] bg-brand" />
-            Swipe &rarr;
-          </p>
+          <span className="bc-gal-swipe">
+            Swipe <span aria-hidden className="bc-gal-swipe-arrow">&rarr;</span>
+          </span>
         )}
       </div>
 
       {useCarousel ? (
         /* ---------------- HORIZONTAL CAROUSEL (5+ photos) ---------------- */
-        <div className="ct-scroll-none flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 pt-1">
+        <div className="ct-scroll-none flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-3 pt-1">
           {ordered.map((url, index) => (
             <button
               key={url}
               type="button"
               onClick={() => open(index)}
               aria-label={`Open photo ${index + 1} of ${ordered.length}`}
+              style={{ '--i': Math.min(index, 4) } as React.CSSProperties}
               className={cn(
-                'bc-shot group aspect-[3/4] shrink-0 snap-start',
-                index === 0 ? 'w-[64%]' : 'w-[44%]'
+                'bc-shot bc-gal-tile group shrink-0 snap-start',
+                index === 0 ? 'aspect-[4/5] w-[70%]' : 'aspect-[3/4] w-[46%] self-end'
               )}
             >
-              <Image
-                src={url}
-                alt={`${businessName} photo ${index + 1}`}
-                fill
-                sizes="(max-width: 480px) 60vw, 260px"
-                className={cn('object-cover', loaded[url] ? 'opacity-100' : 'opacity-0')}
-                onLoad={() => setLoaded((prev) => ({ ...prev, [url]: true }))}
-                onError={() => setLoaded((prev) => ({ ...prev, [url]: true }))}
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-1/3 bg-gradient-to-t from-black/45 to-transparent"
-              />
-              <span className="absolute bottom-2 right-2 z-[1] flex h-8 w-8 items-center justify-center rounded-[11px] bg-white/20 text-white backdrop-blur-sm transition-transform duration-200 group-hover:scale-110">
-                <Expand className="h-3.5 w-3.5" strokeWidth={2.25} />
-              </span>
-              {index === 0 && featuredUrl === url && (
-                <span className="ct-chip absolute left-2.5 top-2.5 z-[1] bg-brand px-2.5 py-1 text-[9.5px] uppercase tracking-[0.1em] text-on-brand shadow-md">
-                  Featured
-                </span>
-              )}
+              {tileBody(url, index, '(max-width: 480px) 70vw, 300px')}
             </button>
           ))}
         </div>
       ) : (
-        /* ---------------- 2x2 GRID (1-4 photos) ---------------- */
+        /* ---------------- EDITORIAL GRID (1-4 photos) ---------------- */
         <div className="px-5">
-          <div className={cn('grid gap-3', ordered.length === 1 ? 'grid-cols-1' : 'grid-cols-2')}>
+          <div className={cn('grid gap-2.5', layout.grid)}>
             {ordered.map((url, index) => (
               <button
                 key={url}
                 type="button"
                 onClick={() => open(index)}
                 aria-label={`Open photo ${index + 1} of ${ordered.length}`}
-                className={cn(
-                  'bc-shot group',
-                  ordered.length === 1 ? 'aspect-[4/3] w-full' : 'aspect-square',
-                  /* An odd last photo spans the row instead of leaving a hole. */
-                  ordered.length === 3 && index === 0 && 'col-span-2 aspect-[2/1]'
-                )}
+                style={{ '--i': index } as React.CSSProperties}
+                className={cn('bc-shot bc-gal-tile group w-full', layout.tile(index))}
               >
-                <Image
-                  src={url}
-                  alt={`${businessName} photo ${index + 1}`}
-                  fill
-                  sizes={
-                    ordered.length === 1 ? '(max-width: 480px) 90vw, 420px' : '(max-width: 480px) 45vw, 210px'
-                  }
-                  className={cn('object-cover', loaded[url] ? 'opacity-100' : 'opacity-0')}
-                  onLoad={() => setLoaded((prev) => ({ ...prev, [url]: true }))}
-                  onError={() => setLoaded((prev) => ({ ...prev, [url]: true }))}
-                />
-                {featuredUrl === url && (
-                  <span className="ct-chip absolute left-2.5 top-2.5 z-[1] bg-brand px-2.5 py-1 text-[9.5px] uppercase tracking-[0.1em] text-on-brand shadow-md">
-                    Featured
-                  </span>
-                )}
+                {tileBody(url, index, layout.sizes(index))}
               </button>
             ))}
           </div>
