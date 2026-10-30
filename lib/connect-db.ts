@@ -391,6 +391,8 @@ export async function createConnectBusiness(
     is_active: input.is_active !== undefined ? input.is_active : true,
   };
 
+  if (input.reseller_id) payload.reseller_id = input.reseller_id;
+
   if (await supportsGalleryFeaturedColumn()) {
     payload.gallery_featured_url = normalizeGalleryFeaturedUrl(
       input.gallery_featured_url,

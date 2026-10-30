@@ -14,7 +14,6 @@ import {
   nextFreeSlug,
   parseMerchantLimit,
   slugify,
-  validateMerchantInput,
   validatePassword,
   validateResellerInput,
 } from '../lib/reseller-validation.ts';
@@ -26,6 +25,7 @@ import {
   whatsappDigits,
 } from '../lib/app-url.ts';
 import { removedImagePaths, storagePathFromUrl } from '../lib/reseller-merchants.ts';
+import { checkResellerImages } from '../lib/reseller-connect.ts';
 
 const base: AccessContext = {
   userId: 'u1',
@@ -118,42 +118,20 @@ test('slugs: accents stripped, collisions numbered', () => {
 
 const prefix = 'https://p.supabase.co/storage/v1/object/public/business-assets/resellers/r1/';
 
-test('merchant input: Grow blocked unless enabled, required review link', () => {
-  const grow = validateMerchantInput({ product: 'grow', name: 'Shop' }, { growEnabled: false, imagePrefix: prefix });
-  assert.equal(grow.ok, false);
-  const missing = validateMerchantInput({ product: 'grow', name: 'Shop' }, { growEnabled: true, imagePrefix: prefix });
-  assert.equal(missing.ok, false);
-  const ok = validateMerchantInput(
-    { product: 'grow', name: 'Shop', google_review_url: 'https://g.page/r/x/review', discount_percentage: '15' },
-    { growEnabled: true, imagePrefix: prefix }
-  );
-  assert.ok(ok.ok && ok.value.discount_percentage === 15);
+test('reseller cards: only their own uploads, max 6 photos', () => {
+  assert.equal(checkResellerImages({ logo_url: 'https://evil.example/x.png' }, prefix), 'Please upload the images again.');
+  assert.ok(checkResellerImages({ gallery_images: Array.from({ length: 7 }, (_, i) => `${prefix}m/${i}.webp`) }, prefix));
+  assert.equal(checkResellerImages({ logo_url: `${prefix}m/logo.webp`, cover_image_url: '', gallery_images: [`${prefix}m/1.webp`] }, prefix), null);
 });
 
-test('merchant input: images must be the reseller own uploads, max 6 photos', () => {
-  const foreign = validateMerchantInput(
-    { name: 'Shop', logo_url: 'https://evil.example/logo.png' },
-    { growEnabled: false, imagePrefix: prefix }
-  );
-  assert.equal(foreign.ok, false);
-  const seven = validateMerchantInput(
-    { name: 'Shop', gallery_images: Array.from({ length: 7 }, (_, i) => `${prefix}m/${i}.webp`) },
-    { growEnabled: false, imagePrefix: prefix }
-  );
-  assert.equal(seven.ok, false);
-  const fine = validateMerchantInput(
-    { name: 'Shop', instagram_handle: '@shop', website_url: 'https://shop.ma' },
-    { growEnabled: false, imagePrefix: prefix }
-  );
-  assert.ok(fine.ok && fine.value.product === 'connect' && fine.value.instagram_handle === 'shop');
-});
-
-test('product cannot change on edit', () => {
-  const r = validateMerchantInput(
-    { product: 'grow', name: 'Shop' },
-    { growEnabled: true, imagePrefix: prefix, productLocked: 'connect' }
-  );
-  assert.ok(r.ok && r.value.product === 'connect');
+test('reseller form is the admin form, without Grow', () => {
+  const page = readFileSync(resolve('app/dashboard/merchants/new/page.tsx'), 'utf8');
+  assert.match(page, /<ConnectBusinessCreateForm variant="reseller" \/>/);
+  const adminPage = readFileSync(resolve('app/admin/(panel)/connect/new/page.tsx'), 'utf8');
+  assert.match(adminPage, /<ConnectBusinessCreateForm variant="admin" \/>/);
+  for (const file of walk(resolve('app/dashboard')).concat([resolve('components/ConnectBusinessCreateForm.tsx')])) {
+    assert.ok(!/grow/i.test(readFileSync(file, 'utf8')), `${file} mentions Grow`);
+  }
 });
 
 test('database rule errors become clear messages', () => {

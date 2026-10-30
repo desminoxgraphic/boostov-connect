@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireApi } from '@/lib/authz';
 import { connectStatsUrl, growStatsUrl } from '@/lib/app-url';
-import { loadEditableMerchant } from '@/lib/reseller-merchants';
+import { loadOwnedMerchant } from '@/lib/reseller-merchants';
 
 /** Issues a new secret stats link; the old one stops working immediately. */
 export async function POST(_request: Request, { params }: { params: { id: string } }) {
@@ -9,7 +9,7 @@ export async function POST(_request: Request, { params }: { params: { id: string
   if (!gate.ok) return gate.response;
   const { supabase } = gate.auth;
 
-  const merchant = await loadEditableMerchant(supabase, params.id);
+  const merchant = await loadOwnedMerchant(supabase, params.id);
   if (!merchant) return NextResponse.json({ error: 'Merchant not found.' }, { status: 404 });
 
   const { data, error } = await supabase.rpc('regenerate_stats_token', {

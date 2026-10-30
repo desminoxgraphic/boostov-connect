@@ -43,7 +43,7 @@ export default async function MerchantSharePage({ params }: { params: { id: stri
         <ConnectLogoAvatar name={merchant.name} logoUrl={merchant.logo_url} size="md" />
         <div className="min-w-0">
           <h1 className="ct-display truncate text-[24px]">{merchant.name}</h1>
-          <p className="ct-meta">{merchant.product === 'grow' ? 'Grow' : 'Connect'} · {merchant.taps_total} taps</p>
+          <p className="ct-meta">Connect · {merchant.taps_total} taps</p>
         </div>
       </div>
 

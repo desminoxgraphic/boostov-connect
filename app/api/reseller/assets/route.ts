@@ -19,8 +19,10 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const file = form.get('file');
-  const merchantId = form.get('merchant_id');
-  const kind = form.get('kind') === 'gallery' ? 'gallery' : 'logo';
+  // The shared Connect form sends business_id; kept merchant_id for older callers.
+  const merchantId = form.get('business_id') ?? form.get('merchant_id');
+  const rawKind = form.get('kind');
+  const kind = rawKind === 'gallery' ? 'gallery' : rawKind === 'cover' ? 'cover' : 'logo';
 
   if (!(file instanceof File)) return NextResponse.json({ error: 'Choose an image.' }, { status: 400 });
   if (typeof merchantId !== 'string' || !UUID.test(merchantId)) {

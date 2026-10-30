@@ -41,6 +41,11 @@ interface ConnectGalleryManagerProps {
    * dropping the admin's choice.
    */
   featuredSupported?: boolean;
+  /** Upload endpoint; the reseller form uploads into the reseller's own folder. */
+  uploadUrl?: string;
+  maxImages?: number;
+  /** Runs on each file before upload, e.g. browser-side compression. */
+  prepareFile?: (file: File) => Promise<File>;
 }
 
 function readError(payload: unknown, fallback: string): string {
@@ -68,6 +73,9 @@ export default function ConnectGalleryManager({
   onChange,
   onError,
   featuredSupported = true,
+  uploadUrl = '/api/admin/assets',
+  maxImages = CONNECT_GALLERY_MAX_IMAGES,
+  prepareFile,
 }: ConnectGalleryManagerProps) {
   const [uploads, setUploads] = useState<GalleryUpload[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -133,11 +141,11 @@ export default function ConnectGalleryManager({
 
       try {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', prepareFile ? await prepareFile(file) : file);
         formData.append('kind', 'gallery');
         formData.append('business_id', businessId);
 
-        const res = await fetch('/api/admin/assets', { method: 'POST', body: formData });
+        const res = await fetch(uploadUrl, { method: 'POST', body: formData });
         const data = await res.json().catch(() => null);
 
         if (!res.ok) {
@@ -176,7 +184,7 @@ export default function ConnectGalleryManager({
         reportError(message);
       }
     },
-    [businessId, commit, reportError]
+    [businessId, commit, reportError, uploadUrl, prepareFile]
   );
 
   const handleFiles = useCallback(
@@ -184,16 +192,16 @@ export default function ConnectGalleryManager({
       if (!fileList || fileList.length === 0) return;
 
       const files = Array.from(fileList);
-      const room = CONNECT_GALLERY_MAX_IMAGES - slotsInUse;
+      const room = maxImages - slotsInUse;
       const accepted = room > 0 ? files.slice(0, room) : [];
 
       if (accepted.length === 0) {
         reportError(
-          `You can add up to ${CONNECT_GALLERY_MAX_IMAGES} photos. Remove some to add more.`
+          `You can add up to ${maxImages} photos. Remove some to add more.`
         );
       } else if (accepted.length < files.length) {
         reportError(
-          `Only ${accepted.length} of ${files.length} files were added (limit is ${CONNECT_GALLERY_MAX_IMAGES} photos).`
+          `Only ${accepted.length} of ${files.length} files were added (limit is ${maxImages} photos).`
         );
       } else {
         reportError(null);
@@ -203,7 +211,7 @@ export default function ConnectGalleryManager({
         void uploadFile(file);
       });
     },
-    [slotsInUse, uploadFile, reportError]
+    [slotsInUse, uploadFile, reportError, maxImages]
   );
 
   const removeAt = (index: number) => {
@@ -271,7 +279,7 @@ export default function ConnectGalleryManager({
             Boostov Connect page. The first photo is the cover shot.
           </p>
         </div>
-        <span className="ct-chip ct-num shrink-0">{images.length} / {CONNECT_GALLERY_MAX_IMAGES}</span>
+        <span className="ct-chip ct-num shrink-0">{images.length} / {maxImages}</span>
       </div>
 
       {/* DROPZONE */}
@@ -326,7 +334,7 @@ export default function ConnectGalleryManager({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={busy || images.length >= CONNECT_GALLERY_MAX_IMAGES}
+          disabled={busy || images.length >= maxImages}
           className="ct-btn ct-btn-sm mt-3.5 bg-ink text-canvas hover:bg-ink-2 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Upload className="w-3.5 h-3.5" />
@@ -468,7 +476,7 @@ export default function ConnectGalleryManager({
               );
             })}
 
-            {images.length < CONNECT_GALLERY_MAX_IMAGES && (
+            {images.length < maxImages && (
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}

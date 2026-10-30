@@ -8,7 +8,6 @@ export type MerchantProduct = 'connect' | 'grow';
 
 export const DEFAULT_MERCHANT_LIMIT = 10;
 export const MAX_MERCHANT_LIMIT = 1000;
-export const MAX_GALLERY_IMAGES = 6;
 export const MAX_UPLOAD_BYTES = 1.5 * 1024 * 1024;
 export const UPLOAD_MIME_TYPES = ['image/webp', 'image/jpeg', 'image/png'] as const;
 
@@ -78,95 +77,6 @@ export function nextFreeSlug(base: string, taken: Set<string>): string {
   return `${base}-${Date.now().toString(36)}`;
 }
 
-export interface MerchantInput {
-  product: MerchantProduct;
-  name: string;
-  logo_url: string | null;
-  phone: string;
-  whatsapp_number: string;
-  instagram_handle: string;
-  website_url: string;
-  email: string;
-  google_maps_url: string;
-  gallery_images: string[];
-  google_review_url: string;
-  discount_percentage: number;
-  is_active: boolean;
-}
-
-function httpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:';
-  } catch {
-    return false;
-  }
-}
-
-/**
- * @param imagePrefix Uploaded images must live under this public storage
- *                    prefix (the reseller's own folder).
- */
-export function validateMerchantInput(
-  raw: Record<string, unknown>,
-  opts: { growEnabled: boolean; imagePrefix: string; productLocked?: MerchantProduct }
-): Result<MerchantInput> {
-  const product: MerchantProduct = opts.productLocked ?? (raw.product === 'grow' ? 'grow' : 'connect');
-  if (product === 'grow' && !opts.growEnabled && !opts.productLocked) {
-    return { ok: false, error: 'Grow is not enabled on your account.' };
-  }
-
-  const name = str(raw.name, 100);
-  if (!name) return { ok: false, error: 'Enter the merchant name.' };
-
-  const logo = str(raw.logo_url, 500);
-  if (logo && !logo.startsWith(opts.imagePrefix)) return { ok: false, error: 'Upload the logo again.' };
-
-  const gallery = Array.isArray(raw.gallery_images)
-    ? raw.gallery_images.filter((u): u is string => typeof u === 'string' && u.length > 0)
-    : [];
-  if (product === 'connect' && gallery.length > MAX_GALLERY_IMAGES) {
-    return { ok: false, error: `A merchant can have up to ${MAX_GALLERY_IMAGES} photos.` };
-  }
-  if (gallery.some((u) => !u.startsWith(opts.imagePrefix))) return { ok: false, error: 'Upload the photos again.' };
-
-  const website = str(raw.website_url, 300);
-  const maps = str(raw.google_maps_url, 500);
-  const review = str(raw.google_review_url, 500);
-  const email = str(raw.email, 200).toLowerCase();
-  if (website && !httpUrl(website)) return { ok: false, error: 'The website must start with https://' };
-  if (maps && !httpUrl(maps)) return { ok: false, error: 'Paste the full Google Maps link.' };
-  if (email && !EMAIL.test(email)) return { ok: false, error: 'Enter a valid email address.' };
-
-  let discount = 10;
-  if (product === 'grow') {
-    if (!review || !httpUrl(review)) return { ok: false, error: 'Paste the Google review link.' };
-    discount = Number(raw.discount_percentage);
-    if (!Number.isInteger(discount) || discount < 1 || discount > 100) {
-      return { ok: false, error: 'The discount must be a whole number from 1 to 100.' };
-    }
-  }
-
-  return {
-    ok: true,
-    value: {
-      product,
-      name,
-      logo_url: logo || null,
-      phone: str(raw.phone, 40),
-      whatsapp_number: str(raw.whatsapp_number, 40),
-      instagram_handle: str(raw.instagram_handle, 100).replace(/^@/, ''),
-      website_url: website,
-      email,
-      google_maps_url: maps,
-      gallery_images: product === 'connect' ? gallery : [],
-      google_review_url: product === 'grow' ? review : '',
-      discount_percentage: discount,
-      is_active: raw.is_active !== false,
-    },
-  };
-}
-
 /** Maps the database's own rule errors to a status and a message for people. */
 export function describeMerchantDbError(message: string): { status: number; error: string; code: string } {
   if (message.includes('MERCHANT_LIMIT_REACHED')) {
@@ -176,7 +86,7 @@ export function describeMerchantDbError(message: string): { status: number; erro
     return { status: 403, code: 'grow', error: 'Grow is not enabled on your account.' };
   }
   if (message.includes('GALLERY_LIMIT_REACHED')) {
-    return { status: 400, code: 'gallery', error: `A merchant can have up to ${MAX_GALLERY_IMAGES} photos.` };
+    return { status: 400, code: 'gallery', error: 'A card can have up to 6 photos.' };
   }
   if (message.includes('RESELLER_INACTIVE')) {
     return { status: 403, code: 'inactive', error: 'Your account is not active.' };

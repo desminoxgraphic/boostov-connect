@@ -105,6 +105,8 @@ export interface CreateConnectBusinessInput {
   fax?: string;
   is_active?: boolean;
   links?: CreateConnectLinkInput[];
+  /** Set only by the server for reseller-created merchants; never read from a request body. */
+  reseller_id?: string;
 }
 
 export interface ConnectActionStat {

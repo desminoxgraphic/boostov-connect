@@ -181,16 +181,7 @@ export default function ResellerSpaceView({ space, readOnly = false }: { space: 
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
-                  <span
-                    className={cn(
-                      'ct-chip border',
-                      m.product === 'grow'
-                        ? 'border-success-border bg-success-soft text-success'
-                        : 'border-info-border bg-info-soft text-info'
-                    )}
-                  >
-                    {m.product === 'grow' ? 'Grow' : 'Connect'}
-                  </span>
+                  <span className="ct-chip border border-info-border bg-info-soft text-info">Connect</span>
                   {!m.is_active && (
                     <span className="ct-chip border border-danger-border bg-danger-soft text-danger">Off</span>
                   )}
