@@ -233,7 +233,9 @@ test('setup links are only consumed by POST, never by opening the page', () => {
   const page = readFileSync(resolve('app/auth/confirm/page.tsx'), 'utf8');
   const route = readFileSync(resolve('app/api/auth/confirm/route.ts'), 'utf8');
   assert.ok(!page.includes('verifyOtp'));
-  assert.match(page, /method="post"/);
+  const form = readFileSync(resolve('components/ConfirmLinkForm.tsx'), 'utf8');
+  assert.match(form, /method="post"/);
+  assert.match(route, /bx_used_link/);
   assert.match(route, /export async function POST/);
   assert.ok(!/export async function GET/.test(route));
 });

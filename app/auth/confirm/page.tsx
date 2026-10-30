@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { ArrowRight } from 'lucide-react';
 import AuthShell, { FormError } from '@/components/AuthShell';
+import ConfirmLinkForm from '@/components/ConfirmLinkForm';
 
 export const metadata: Metadata = {
   title: 'Boostov',
@@ -26,14 +26,7 @@ export default function ConfirmLinkPage({
         {failed ? (
           <FormError message="This link has expired or was already used. Ask Boostov to send you a new one." />
         ) : (
-          <form method="post" action="/api/auth/confirm" className="space-y-4">
-            <p className="ct-meta">Press Continue to choose your password.</p>
-            <input type="hidden" name="token_hash" value={tokenHash} />
-            <button type="submit" className="sh-save h-12">
-              <span>Continue</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
+          <ConfirmLinkForm tokenHash={tokenHash} />
         )}
       </AuthShell>
     </div>
