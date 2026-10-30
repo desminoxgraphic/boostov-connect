@@ -5,6 +5,7 @@ const TABS = [
   { key: 'profiles', href: '/admin', label: 'My profiles' },
   { key: 'resellers', href: '/admin/resellers', label: 'Resellers' },
   { key: 'merchants', href: '/admin/merchants', label: 'All merchants' },
+  { key: 'security', href: '/admin/mfa', label: 'Security' },
 ] as const;
 
 export type AdminTab = (typeof TABS)[number]['key'];

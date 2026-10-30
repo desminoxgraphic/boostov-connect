@@ -41,5 +41,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ next: '/dashboard' });
   }
 
-  return NextResponse.json({ next: '/admin/mfa' });
+  return NextResponse.json({ next: '/admin' });
 }

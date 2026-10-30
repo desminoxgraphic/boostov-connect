@@ -35,7 +35,8 @@ export function decideAccess(area: Area, ctx: AccessContext | null): Decision {
   if (area === 'admin' || area === 'admin-mfa') {
     if (ctx.role !== 'super_admin') return 'forbidden';
     if (area === 'admin-mfa') return 'allow';
-    if (!ctx.hasTotp || ctx.aal !== 'aal2') return 'mfa';
+    // 2FA is optional; once the super admin turns it on, every session must pass it.
+    if (ctx.hasTotp && ctx.aal !== 'aal2') return 'mfa';
     return 'allow';
   }
 

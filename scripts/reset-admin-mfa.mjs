@@ -46,4 +46,4 @@ for (const factor of factors?.factors ?? []) {
   await admin.auth.admin.mfa.deleteFactor({ userId: user.id, id: factor.id });
   console.log(`Removed ${factor.friendly_name || factor.id}`);
 }
-console.log('Done. Sign in at /admin/login to set up a new authenticator.');
+console.log('Done. 2FA is off; sign in at /admin/login with email + password. You can turn 2FA on again under Security.');

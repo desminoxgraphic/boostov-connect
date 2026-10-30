@@ -74,4 +74,4 @@ if (linkError || !link?.properties?.hashed_token) {
 
 console.log('\nSuper admin ready. Open this link once to choose your password:\n');
 console.log(`${appUrl}/auth/confirm?token_hash=${encodeURIComponent(link.properties.hashed_token)}&type=recovery\n`);
-console.log('Then set up your authenticator app on the screen that follows.');
+console.log('After that, sign in at /admin/login with your email and password.');

@@ -143,6 +143,13 @@ reset role;
 -- 4. Super admin needs aal2 ----------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-0000000000c3","role":"authenticated","aal":"aal1"}';
+insert into verify_result select 'admin_no2fa_resellers', (count(*) >= 2)::text from public.resellers;
+reset role;
+-- Once 2FA is turned on, a password-only session is no longer enough.
+insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at, secret)
+values ('00000000-0000-4000-8000-00000000f001', '00000000-0000-4000-8000-0000000000c3', 'verify', 'totp', 'verified', now(), now(), 'JBSWY3DPEHPK3PXP');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-0000000000c3","role":"authenticated","aal":"aal1"}';
 insert into verify_result select 'admin_aal1_resellers', count(*)::text from public.resellers;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-0000000000c3","role":"authenticated","aal":"aal2"}';
 insert into verify_result select 'admin_aal2_resellers', (count(*) >= 2)::text from public.resellers;
@@ -169,6 +176,7 @@ declare
     'a_tap_rows_foreign', '0',
     'b_name_after_a_update', 'Verify B Shop',
     'suspended_rows', '0',
+    'admin_no2fa_resellers', 'true',
     'admin_aal1_resellers', '0',
     'admin_aal2_resellers', 'true'
   );

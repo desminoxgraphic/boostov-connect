@@ -17,8 +17,8 @@ export default async function AdminMfaPage() {
 
   return (
     <AuthShell
-      title="Two-factor sign-in"
-      subtitle={mode === 'enroll' ? 'Set up your authenticator app' : 'Boostov Admin'}
+      title={mode === 'verify' ? 'Two-factor sign-in' : 'Security'}
+      subtitle={mode === 'enroll' ? 'Two-factor sign-in is off' : 'Boostov Admin'}
     >
       <AdminMfaPanel mode={mode} devices={devices} />
     </AuthShell>

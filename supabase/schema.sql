@@ -739,3 +739,22 @@ revoke insert, update, delete on public.connect_links, public.rewards from authe
 revoke select, update, delete on public.connect_businesses, public.connect_links,
   public.businesses, public.rewards from anon;
 
+
+-- Optional admin 2FA (mirrors migrations/202610300002_optional_admin_2fa.sql)
+
+create or replace function public.is_super_admin()
+returns boolean
+language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.user_roles
+    where user_id = auth.uid() and role = 'super_admin'
+  ) and (
+    coalesce(auth.jwt() ->> 'aal', 'aal1') = 'aal2'
+    or not exists (
+      select 1 from auth.mfa_factors
+      where user_id = auth.uid() and status = 'verified'
+    )
+  );
+$$;

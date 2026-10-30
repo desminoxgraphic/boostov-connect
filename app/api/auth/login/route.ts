@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: GENERIC }, { status: 401 });
   }
 
-  if (area === 'admin') return NextResponse.json({ next: '/admin/mfa' });
+  if (area === 'admin') return NextResponse.json({ next: ctx.hasTotp ? '/admin/mfa' : '/admin' });
 
   if (ctx.resellerStatus === 'suspended' || !ctx.resellerStatus) {
     await supabase.auth.signOut();

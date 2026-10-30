@@ -100,6 +100,9 @@ export default function AdminMfaPanel({
           <code className="ct-num mt-2 block break-all text-ink">{enrolment.secret}</code>
         </details>
         {codeForm}
+        <Link href="/admin" className="ct-btn ct-btn-md w-full border border-line bg-surface">
+          Cancel
+        </Link>
       </div>
     );
   }
@@ -117,14 +120,17 @@ export default function AdminMfaPanel({
     return (
       <div className="space-y-4">
         <p className="ct-meta">
-          Your admin account needs a second step. You will scan a QR code once; after that, every sign-in asks
-          for a 6-digit code from your phone.
+          Optional. Turn on 2FA to also ask for a 6-digit code from your phone (Google Authenticator, Authy…)
+          each time you sign in. You will scan a QR code once.
         </p>
         <FormError message={error} />
         <button type="button" onClick={startEnrol} disabled={loading} className="sh-save h-12">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
-          <span>Set up authenticator</span>
+          <span>Enable 2FA</span>
         </button>
+        <Link href="/admin" className="ct-btn ct-btn-md w-full border border-line bg-surface">
+          Back to admin panel
+        </Link>
       </div>
     );
   }

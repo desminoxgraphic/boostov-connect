@@ -59,8 +59,8 @@ test('a reseller is rejected from the admin area, even with the URL', () => {
   assert.equal(decideAccess('admin-mfa', reseller()), 'forbidden');
 });
 
-test('the super admin needs TOTP: no factor or aal1 means the MFA screen', () => {
-  assert.equal(decideAccess('admin', admin()), 'mfa');
+test('admin 2FA is optional, and enforced once turned on', () => {
+  assert.equal(decideAccess('admin', admin()), 'allow');
   assert.equal(decideAccess('admin', admin({ hasTotp: true, aal: 'aal1' })), 'mfa');
   assert.equal(decideAccess('admin', admin({ hasTotp: true, aal: 'aal2' })), 'allow');
   assert.equal(pageRedirectFor('admin', 'mfa'), '/admin/mfa');
@@ -260,6 +260,8 @@ test('migration closes the token leak and enforces reseller rules in the databas
   assert.match(sql, /GROW_NOT_ENABLED/);
   assert.match(sql, /for update/);
   assert.match(sql, /'aal2'/);
+  const optional = readFileSync(resolve('supabase/migrations/202610300002_optional_admin_2fa.sql'), 'utf8');
+  assert.match(optional, /mfa_factors/);
   assert.ok(!/drop column/i.test(sql), 'migration must be additive');
   assert.ok(!/drop table/i.test(sql), 'migration must be additive');
 });
