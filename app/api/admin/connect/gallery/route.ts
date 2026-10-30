@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '@/lib/auth';
+import { requireApi } from '@/lib/authz';
 import { getConnectCapabilities } from '@/lib/connect-db';
 import { CONNECT_GALLERY_MAX_IMAGES } from '@/lib/connect-utils';
 
@@ -15,9 +15,8 @@ import { CONNECT_GALLERY_MAX_IMAGES } from '@/lib/connect-utils';
  * The route keeps its original path so existing callers do not break.
  */
 export async function GET() {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
 
   try {
     return NextResponse.json({

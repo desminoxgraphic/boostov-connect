@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '@/lib/auth';
+import { requireApi } from '@/lib/authz';
 import {
   getConnectBusinessById,
   updateConnectBusiness,
@@ -12,9 +12,8 @@ export async function GET(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
 
   try {
     const data = await getConnectBusinessById(params.id);
@@ -35,9 +34,8 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
 
   try {
     const body = await request.json();
@@ -57,9 +55,8 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
 
   try {
     await deleteConnectBusiness(params.id);

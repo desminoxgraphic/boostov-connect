@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '@/lib/auth';
+import { requireApi } from '@/lib/authz';
 import { getAllConnectBusinesses, createConnectBusiness } from '@/lib/connect-db';
 import { pickConnectBusinessFields } from '@/lib/connect-utils';
 import type { CreateConnectBusinessInput } from '@/lib/connect-types';
 
 export async function GET() {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
 
   try {
     const businesses = await getAllConnectBusinesses();
@@ -20,9 +19,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
 
   try {
     const body = await request.json();

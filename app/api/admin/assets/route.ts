@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '@/lib/auth';
+import { requireApi } from '@/lib/authz';
 import { supabaseServer } from '@/lib/supabase/server';
 
 const MIME_EXTENSIONS: Record<string, string> = {
@@ -12,9 +12,8 @@ const MIME_EXTENSIONS: Record<string, string> = {
 const BUSINESS_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-  }
+  const gate = await requireApi('admin');
+  if (!gate.ok) return gate.response;
   if (!supabaseServer) {
     return NextResponse.json(
       { error: 'Database storage is not configured. Check SUPABASE_SERVICE_ROLE_KEY environment variable.' },

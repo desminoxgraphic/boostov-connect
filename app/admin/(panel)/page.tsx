@@ -7,6 +7,7 @@ import { ConnectBusiness, ConnectAnalyticsSummary } from '@/lib/connect-types';
 import ThemeToggle from '@/components/ThemeToggle';
 import AdminTopBar from '@/components/AdminTopBar';
 import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
+import AdminNav from '@/components/AdminNav';
 import { cn } from '@/lib/utils';
 import {
   Plus,
@@ -92,7 +93,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/admin/login');
   };
 
@@ -134,6 +135,7 @@ export default function AdminDashboardPage() {
 
       {/* MAIN CONTAINER */}
       <main className="mx-auto max-w-shell space-y-5 px-4 pb-12 pt-5 sm:space-y-6 sm:pt-8">
+        <AdminNav active="profiles" />
         <section className="sh-hero sh-rise">
           <span aria-hidden className="sh-arcs">
             <span />

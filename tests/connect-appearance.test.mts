@@ -272,7 +272,7 @@ test('the separating ring is one neutral that never changes between themes', () 
 
 test('every business logo goes through the one shared circular component', () => {
   const card = readFileSync(resolve(process.cwd(), 'components/ConnectPublicCard.tsx'), 'utf8');
-  const admin = readFileSync(resolve(process.cwd(), 'app/admin/page.tsx'), 'utf8');
+  const admin = readFileSync(resolve(process.cwd(), 'app/admin/(panel)/page.tsx'), 'utf8');
   const avatar = readFileSync(resolve(process.cwd(), 'components/ConnectLogoAvatar.tsx'), 'utf8');
 
   assert.match(card, /<ConnectLogoAvatar\b/, 'the public card must render the logo via ConnectLogoAvatar');
