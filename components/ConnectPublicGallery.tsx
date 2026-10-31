@@ -138,6 +138,8 @@ export default function ConnectPublicGallery({
         alt={`${businessName} photo ${index + 1}`}
         fill
         sizes={sizes}
+        // Photos are small once resized: load the first ones with the page, not on scroll.
+        loading={index < 6 ? 'eager' : 'lazy'}
         className="object-cover"
       />
       <span aria-hidden className="bc-gal-scrim" />
