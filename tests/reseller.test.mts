@@ -300,3 +300,10 @@ test('deleting a reseller is admin-only and needs the typed name', () => {
   assert.match(del, /confirm_name/);
   assert.ok(del.indexOf("from('connect_businesses')") < del.indexOf('deleteUser'), 'cards are removed before the login');
 });
+
+test('card images are never hidden while waiting for a load event (server-rendered cards miss it)', () => {
+  for (const file of ['components/ConnectPublicCard.tsx', 'components/ConnectPublicGallery.tsx', 'components/ConnectLogoAvatar.tsx']) {
+    const src = readFileSync(resolve(file), 'utf8');
+    assert.ok(!/opacity-0/.test(src), `${file} hides images until onLoad`);
+  }
+});

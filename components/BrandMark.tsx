@@ -27,11 +27,12 @@ export default function BrandMark({
         width={size}
         height={size}
         priority={priority}
+        loading={priority ? undefined : 'eager'}
         unoptimized
         className={cn(adaptive && 'brand-light', className)}
       />
       {adaptive && (
-        <Image src={darkSrc} alt="" width={size} height={size} unoptimized className={cn('brand-dark', className)} />
+        <Image src={darkSrc} alt="" width={size} height={size} loading="eager" unoptimized className={cn('brand-dark', className)} />
       )}
     </>
   );

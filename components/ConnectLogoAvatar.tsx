@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -55,8 +55,6 @@ export default function ConnectLogoAvatar({
   imageClassName,
   priority = false,
 }: ConnectLogoAvatarProps) {
-  // Fades the logo in once it has arrived; a soft pulse fills the circle until then.
-  const [loaded, setLoaded] = useState(false);
   const { box, px, text, pad } = SIZES[size];
   const trimmed = (name || '').trim();
 
@@ -69,7 +67,6 @@ export default function ConnectLogoAvatar({
         box,
         ring === 'floating' && 'ct-avatar-floating',
         fallbackTone === 'accent' && !logoUrl ? 'bg-brand' : 'bg-surface',
-        logoUrl && !loaded && 'animate-pulse',
         className
       )}
     >
@@ -80,16 +77,9 @@ export default function ConnectLogoAvatar({
           fill
           sizes={`${px}px`}
           priority={priority}
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
           /* `contain` so a rectangular or transparent upload is letterboxed
            * inside the circle instead of being cropped by it. */
-          className={cn(
-            'object-contain transition-opacity duration-300',
-            loaded ? 'opacity-100' : 'opacity-0',
-            pad,
-            imageClassName
-          )}
+          className={cn('object-contain', pad, imageClassName)}
         />
       ) : (
         <span

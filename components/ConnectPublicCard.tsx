@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { ConnectBusiness, ConnectLink } from '@/lib/connect-types';
 import { downloadVCard } from '@/lib/vcard';
@@ -86,7 +86,6 @@ function actionIcon(action: ConnectActionDefinition, className: string): React.R
 }
 
 export default function ConnectPublicCard({ business, links, onTrack }: ConnectPublicCardProps) {
-  const [coverLoaded, setCoverLoaded] = useState(false);
   const appearance = useConnectAppearance();
 
   /* Pointer tilt for the floating logo. Writes two custom properties on one
@@ -267,12 +266,7 @@ export default function ConnectPublicCard({ business, links, onTrack }: ConnectP
                 fill
                 priority
                 sizes="(max-width: 480px) 100vw, 440px"
-                className={cn(
-                  'object-cover transition-opacity duration-500',
-                  coverLoaded ? 'opacity-100' : 'opacity-0'
-                )}
-                onLoad={() => setCoverLoaded(true)}
-                onError={() => setCoverLoaded(true)}
+                className="object-cover"
               />
             )}
           </div>

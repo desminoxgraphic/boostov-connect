@@ -57,7 +57,6 @@ export default function ConnectPublicGallery({
   sectionIndex,
 }: ConnectPublicGalleryProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [loaded, setLoaded] = useState<Record<string, boolean>>({});
 
   // The featured photo leads the gallery, everything else keeps admin order.
   const ordered = useMemo(() => {
@@ -127,7 +126,6 @@ export default function ConnectPublicGallery({
 
   if (ordered.length === 0) return null;
 
-  const markLoaded = (url: string) => setLoaded((prev) => ({ ...prev, [url]: true }));
 
   const featuredChip = (
     <span className="bc-gal-featured">Featured</span>
@@ -140,9 +138,7 @@ export default function ConnectPublicGallery({
         alt={`${businessName} photo ${index + 1}`}
         fill
         sizes={sizes}
-        className={cn('object-cover', loaded[url] ? 'opacity-100' : 'opacity-0')}
-        onLoad={() => markLoaded(url)}
-        onError={() => markLoaded(url)}
+        className="object-cover"
       />
       <span aria-hidden className="bc-gal-scrim" />
       <span aria-hidden className="bc-gal-expand">
