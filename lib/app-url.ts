@@ -44,7 +44,7 @@ export function authConfirmUrl(tokenHash: string, base = getAppUrl()): string {
 }
 
 /** Boostov's own WhatsApp, shown to resellers who hit their merchant limit. */
-export const BOOSTOV_SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_BOOSTOV_WHATSAPP || '+212789216699';
+export const BOOSTOV_SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_BOOSTOV_WHATSAPP || '+212709272476';
 
 /** wa.me only accepts digits: no "+", spaces or dashes. A local Moroccan 06/07 number gets 212. */
 export function whatsappDigits(phone: string): string {

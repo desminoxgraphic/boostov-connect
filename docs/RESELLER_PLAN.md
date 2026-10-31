@@ -16,7 +16,7 @@ Status: **APPROVED with answers below. Waiting for the owner to confirm the prod
 | Database | `.env.local` = production, no staging. The migration runs only after the owner confirms a full backup. |
 | Test data | Seed 1 reseller + 2 merchants named `TEST_…` for screenshots, then delete them (auth user, rows, storage files) and confirm. |
 | Suspension | The reseller loses access. Their merchants stay live publicly. |
-| Limit contact | WhatsApp `+212789216699`. |
+| Limit contact | WhatsApp `+212709272476` (changed 2026-10-31, was +212789216699). |
 | Token leak | Drop the anon read policies on `connect_businesses` / `connect_links` (they exposed `dashboard_token`). |
 
 Note: in the Grow app, `/m/` means "merchant token page". In this app, `/m/` means "merchant public link". They're on different domains, so they never clash.

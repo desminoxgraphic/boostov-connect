@@ -307,3 +307,9 @@ test('card images are never hidden while waiting for a load event (server-render
     assert.ok(!/opacity-0/.test(src), `${file} hides images until onLoad`);
   }
 });
+
+test('Boostov support WhatsApp is 0709272476', () => {
+  const src = readFileSync(resolve('lib/app-url.ts'), 'utf8');
+  assert.match(src, /'\+212709272476'/);
+  assert.equal(whatsappDigits('0709272476'), '212709272476');
+});
