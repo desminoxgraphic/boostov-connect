@@ -23,7 +23,17 @@ export interface AdminCardRow extends MerchantSummary {
   link: string;
 }
 
+export interface AccessRequestRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  created_at: string;
+}
+
 export interface AdminOverview {
+  requests: AccessRequestRow[];
   resellers: ResellerOverviewRow[];
   cards: AdminCardRow[];
   totals: { resellers: number; cards: number; taps: number; taps_7d: number };
@@ -31,10 +41,15 @@ export interface AdminOverview {
 
 /** Everything the one-screen admin panel shows. Service client only. */
 export async function loadAdminOverview(service: SupabaseClient): Promise<AdminOverview> {
-  const [resellers, { merchants }, users] = await Promise.all([
+  const [resellers, { merchants }, users, { data: requests }] = await Promise.all([
     loadResellers(service),
     loadAllMerchants(service),
     service.auth.admin.listUsers({ perPage: 1000 }),
+    service
+      .from('access_requests')
+      .select('id, name, email, phone, message, created_at')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
   ]);
   const lastSignIn = new Map((users.data?.users ?? []).map((u) => [u.id, u.last_sign_in_at ?? null]));
   const names = new Map(resellers.map((r) => [r.id, r.name]));
@@ -66,6 +81,7 @@ export async function loadAdminOverview(service: SupabaseClient): Promise<AdminO
     }));
 
   return {
+    requests: (requests as AccessRequestRow[]) ?? [],
     resellers: rows,
     cards,
     totals: {

@@ -1,6 +1,7 @@
 import { requirePage } from '@/lib/authz';
 import AuthShell from '@/components/AuthShell';
 import AdminMfaPanel from '@/components/AdminMfaPanel';
+import ChangePasswordForm from '@/components/ChangePasswordForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,12 @@ export default async function AdminMfaPage() {
       subtitle={mode === 'enroll' ? 'Two-factor sign-in is off' : 'Boostov Admin'}
     >
       <AdminMfaPanel mode={mode} devices={devices} />
+      {mode !== 'verify' && (
+        <div className="border-t border-line pt-5">
+          <h2 className="mb-4 text-[15px] font-bold text-ink">Change my password</h2>
+          <ChangePasswordForm />
+        </div>
+      )}
     </AuthShell>
   );
 }

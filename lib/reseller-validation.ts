@@ -12,9 +12,9 @@ export const MAX_UPLOAD_BYTES = 1.5 * 1024 * 1024;
 export const UPLOAD_MIME_TYPES = ['image/webp', 'image/jpeg', 'image/png'] as const;
 
 export function validatePassword(password: string): string | null {
-  if (password.length < 10) return 'Use at least 10 characters.';
-  if (password.length > 72) return 'Use 72 characters or fewer.';
-  if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) return 'Use letters and at least one number.';
+  if (password.length < 10) return 'Au moins 10 caractères.';
+  if (password.length > 72) return '72 caractères au maximum.';
+  if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) return 'Mélangez des lettres et au moins un chiffre.';
   return null;
 }
 
@@ -26,6 +26,7 @@ export interface ResellerInput {
   phone: string;
   merchant_limit: number;
   grow_enabled: boolean;
+  password: string;
 }
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -51,7 +52,13 @@ export function validateResellerInput(raw: Record<string, unknown>): Result<Rese
     ? DEFAULT_MERCHANT_LIMIT
     : parseMerchantLimit(raw.merchant_limit);
   if (limit === null) return { ok: false, error: `The merchant limit must be a whole number from 0 to ${MAX_MERCHANT_LIMIT}.` };
-  return { ok: true, value: { name, email, phone, merchant_limit: limit, grow_enabled: raw.grow_enabled === true } };
+  const password = typeof raw.password === 'string' ? raw.password : '';
+  const passwordProblem = validatePassword(password);
+  if (passwordProblem) return { ok: false, error: `Mot de passe : ${passwordProblem}` };
+  return {
+    ok: true,
+    value: { name, email, phone, merchant_limit: limit, grow_enabled: raw.grow_enabled === true, password },
+  };
 }
 
 /** "Café Atlas Ifni" -> "cafe-atlas-ifni". Matches the DB slug check. */

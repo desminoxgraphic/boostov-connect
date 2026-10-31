@@ -67,6 +67,7 @@ export const config = {
     '/api/admin/:path*',
     '/api/reseller/:path*',
     '/login',
+    '/connexion',
     '/auth/:path*',
   ],
 };

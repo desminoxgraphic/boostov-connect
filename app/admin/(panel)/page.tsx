@@ -10,7 +10,7 @@ import { getAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
-const EMPTY: AdminOverview = { resellers: [], cards: [], totals: { resellers: 0, cards: 0, taps: 0, taps_7d: 0 } };
+const EMPTY: AdminOverview = { requests: [], resellers: [], cards: [], totals: { resellers: 0, cards: 0, taps: 0, taps_7d: 0 } };
 
 /** The super admin panel: everything on one screen. */
 export default async function AdminPage() {
@@ -27,7 +27,7 @@ export default async function AdminPage() {
         >
           <ShieldCheck className="h-4 w-4" />
         </Link>
-        <LogoutButton redirectTo="/login" />
+        <LogoutButton redirectTo="/connexion" />
       </AdminTopBar>
       <main className="mx-auto max-w-shell px-4 pb-16 pt-5 sm:pt-8">
         <AdminHome overview={overview} appUrl={getAppUrl()} now={Date.now()} />

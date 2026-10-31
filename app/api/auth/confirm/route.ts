@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const tokenHash = String(form.get('token_hash') || '');
   const base = new URL(request.url);
-  if (!tokenHash) return NextResponse.redirect(new URL('/login?error=expired', base), 303);
+  if (!tokenHash) return NextResponse.redirect(new URL('/connexion?error=expired', base), 303);
 
   const store = await cookies();
   const supabase = await createUserClient();
@@ -31,11 +31,11 @@ export async function POST(request: Request) {
   if (error) {
     const sameLink = store.get(USED_LINK_COOKIE)?.value === fingerprint(tokenHash);
     const { data } = sameLink ? await supabase.auth.getUser() : { data: { user: null } };
-    if (!(sameLink && data.user)) return NextResponse.redirect(new URL('/login?error=expired', base), 303);
+    if (!(sameLink && data.user)) return NextResponse.redirect(new URL('/connexion?error=expired', base), 303);
   } else {
     store.set(USED_LINK_COOKIE, fingerprint(tokenHash), { ...hardenCookie(), maxAge: 600 });
   }
 
-  const result = await afterSignIn(supabase, 'link');
-  return NextResponse.redirect(new URL(result.ok ? result.next : `/login?error=${result.code}`, base), 303);
+  const result = await afterSignIn(supabase);
+  return NextResponse.redirect(new URL(result.ok ? result.next : `/connexion?error=${result.code}`, base), 303);
 }

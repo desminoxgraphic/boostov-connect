@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireApi } from '@/lib/authz';
 import { supabaseServer } from '@/lib/supabase/server';
 import { validateResellerInput } from '@/lib/reseller-validation';
-import { resellerInviteMessage } from '@/lib/reseller-admin';
+import { resellerAccessMessage } from '@/lib/reseller-admin';
 import { buildWhatsAppUrl } from '@/lib/app-url';
 import { loadResellers } from '@/lib/reseller-data';
 
@@ -14,9 +14,9 @@ export async function GET() {
 }
 
 /**
- * Invites a reseller: their email is added to the allowed list (an Auth user
- * with no password, plus the reseller role). No email is sent; they simply sign
- * in at /login with Google or an email code.
+ * Creates a reseller with the email and password the admin chose. No email is
+ * sent: the admin passes the sign-in details on (WhatsApp button).
+ * Optional request_id marks the matching "Demander un accès" request approved.
  */
 export async function POST(request: Request) {
   const gate = await requireApi('admin');
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
 
   const { data: created, error: createError } = await service.auth.admin.createUser({
     email: input.email,
+    password: input.password,
     email_confirm: true,
     user_metadata: { name: input.name },
   });
@@ -58,7 +59,8 @@ export async function POST(request: Request) {
         phone: input.phone,
         merchant_limit: input.merchant_limit,
         grow_enabled: input.grow_enabled,
-        status: 'pending',
+        status: 'active',
+        password_set_at: new Date().toISOString(),
       });
 
   if (resellerError) {
@@ -67,7 +69,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Could not create the reseller.' }, { status: 500 });
   }
 
-  const message = resellerInviteMessage(input.name, input.email);
+  if (typeof raw.request_id === 'string') {
+    await service.from('access_requests').update({ status: 'approved' }).eq('id', raw.request_id);
+  }
+
+  const message = resellerAccessMessage(input.name, input.email, input.password);
   return NextResponse.json(
     { id: userId, message, whatsapp_url: buildWhatsAppUrl(input.phone, message) },
     { status: 201 }

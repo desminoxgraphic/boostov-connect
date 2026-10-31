@@ -16,12 +16,15 @@ import {
   Play,
   Plus,
   Power,
+  KeyRound,
+  RefreshCw,
   Trash2,
   X,
 } from 'lucide-react';
+import { generatePassword } from '@/lib/password';
 import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
 import { cn } from '@/lib/utils';
-import type { AdminCardRow, AdminOverview, ResellerOverviewRow } from '@/lib/admin-overview';
+import type { AccessRequestRow, AdminCardRow, AdminOverview, ResellerOverviewRow } from '@/lib/admin-overview';
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -110,7 +113,7 @@ function IconButton({
 
 export default function AdminHome({ overview, appUrl, now }: { overview: AdminOverview; appUrl: string; now: number }) {
   const router = useRouter();
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<AddPrefill | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { totals } = overview;
 
@@ -142,10 +145,16 @@ export default function AdminHome({ overview, appUrl, now }: { overview: AdminOv
         </div>
       )}
 
-      <ResellersSection resellers={overview.resellers} onAdd={() => setAdding(true)} run={run} appUrl={appUrl} now={now} />
+      <RequestsSection
+        requests={overview.requests}
+        onApprove={(r) => setAdding({ requestId: r.id, name: r.name, email: r.email, phone: r.phone })}
+        run={run}
+        now={now}
+      />
+      <ResellersSection resellers={overview.resellers} onAdd={() => setAdding({})} run={run} appUrl={appUrl} now={now} />
       <CardsSection cards={overview.cards} resellers={overview.resellers} run={run} />
 
-      {adding && <AddResellerDialog onClose={() => setAdding(false)} onCreated={() => router.refresh()} />}
+      {adding && <AddResellerDialog prefill={adding} onClose={() => setAdding(null)} onCreated={() => router.refresh()} />}
     </div>
   );
 }
@@ -340,6 +349,7 @@ function ResellerActions({
 }) {
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const suspended = reseller.status === 'suspended';
   const toggleStatus = async () => {
     if (!suspended && !confirm(`Suspend ${reseller.name}? They lose access right away. Their cards stay online.`)) return;
@@ -370,12 +380,19 @@ function ResellerActions({
         <Trash2 className="h-4 w-4" />
       </IconButton>
       {deleting && <DeleteResellerDialog reseller={reseller} onClose={() => setDeleting(false)} run={run} />}
+      {resetting && <ResetPasswordDialog reseller={reseller} onClose={() => setResetting(false)} />}
       <details className="relative">
         <summary className="ct-btn ct-btn-icon h-9 w-9 cursor-pointer list-none border border-line bg-surface hover:bg-surface-2" aria-label="More">
           <MoreHorizontal className="h-4 w-4" />
         </summary>
         <div className="absolute right-0 z-20 mt-1.5 w-56 rounded-[14px] border border-line bg-surface p-1.5 shadow-lg max-md:left-0 max-md:right-auto">
-          <InviteMenuItems reseller={reseller} appUrl={appUrl} />
+          <button
+            type="button"
+            onClick={() => setResetting(true)}
+            className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left text-[13px] text-ink hover:bg-surface-2"
+          >
+            <KeyRound className="h-4 w-4" /> New password
+          </button>
           <button
             type="button"
             onClick={toggleGrow}
@@ -464,57 +481,115 @@ function DeleteResellerDialog({
   );
 }
 
-function inviteText(r: { name: string; email: string }, origin: string) {
-  const first = r.name.split(/\s+/)[0] || r.name;
+function CredentialsResult({ message, whatsappUrl, onDone }: { message: string; whatsappUrl: string; onDone: () => void }) {
+  const { copied, copy } = useCopy();
   return (
-    `Bonjour ${first}, bienvenue chez Boostov !\n\n` +
-    `Votre espace revendeur est prêt. Pour vous connecter :\n` +
-    `1. Ouvrez ${origin}/login\n` +
-    `2. Choisissez "Continuer avec Google" ou entrez votre email : ${r.email}\n` +
-    `3. Si vous choisissez l'email, entrez le code reçu.\n\n` +
-    `À bientôt !`
+    <div className="space-y-4">
+      <p className="ct-meta">Send these sign-in details to the reseller. They sign in at /connexion with this email and password.</p>
+      <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-[14px] bg-surface-2 p-3 text-[12.5px] leading-relaxed text-ink-2">{message}</pre>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => copy('msg', message)} className="ct-btn ct-btn-md border border-line bg-surface">
+          {copied === 'msg' ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />} Copy
+        </button>
+        <a href={whatsappUrl} target="_blank" rel="noreferrer" className="ct-btn ct-btn-md bg-[#25D366] text-white hover:brightness-95">
+          <MessageCircle className="h-4 w-4" /> WhatsApp
+        </a>
+      </div>
+      <button type="button" onClick={onDone} className="sh-save h-11">Done</button>
+    </div>
   );
 }
 
-function waLink(phone: string, text: string) {
-  let digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('00')) digits = digits.slice(2);
-  if (/^0[5-7]\d{8}$/.test(digits)) digits = `212${digits.slice(1)}`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+function PasswordField({ value, onChange, id }: { value: string; onChange: (v: string) => void; id: string }) {
+  return (
+    <div>
+      <label className="ct-label" htmlFor={id}>Password</label>
+      <div className="flex gap-2">
+        <input id={id} required autoComplete="off" value={value} onChange={(e) => onChange(e.target.value)} className="ct-control ct-num" />
+        <button
+          type="button"
+          onClick={() => onChange(generatePassword())}
+          className="ct-btn ct-btn-md shrink-0 border border-line bg-surface px-3"
+          title="Generate a new password"
+        >
+          <RefreshCw className="h-4 w-4" /> New
+        </button>
+      </div>
+      <p className="ct-hint">At least 10 characters with letters and a number. You send it to them.</p>
+    </div>
+  );
 }
 
-function InviteMenuItems({ reseller, appUrl }: { reseller: ResellerOverviewRow; appUrl: string }) {
-  const { copied, copy } = useCopy();
-  const text = inviteText(reseller, appUrl);
+function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <>
-      <a
-        href={waLink(reseller.phone, text)}
-        target="_blank"
-        rel="noreferrer"
-        className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-[13px] text-ink hover:bg-surface-2"
-      >
-        <MessageCircle className="h-4 w-4 text-[#25D366]" /> Send login info on WhatsApp
-      </a>
-      <button
-        type="button"
-        onClick={() => copy('invite', text)}
-        className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left text-[13px] text-ink hover:bg-surface-2"
-      >
-        {copied === 'invite' ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />} Copy login info
-      </button>
-    </>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="w-full max-w-md rounded-t-[24px] bg-surface p-5 text-left shadow-2xl sm:rounded-[24px] sm:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-[17px] font-bold text-ink">{title}</h3>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-2" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ResetPasswordDialog({ reseller, onClose }: { reseller: ResellerOverviewRow; onClose: () => void }) {
+  const [password, setPassword] = useState(() => generatePassword());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<{ message: string; whatsapp_url: string } | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      setDone(await send(`/api/admin/resellers/${reseller.id}/password`, 'POST', { password }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not change the password.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog title={done ? 'Password changed' : `New password for ${reseller.name}`} onClose={onClose}>
+      {done ? (
+        <CredentialsResult message={done.message} whatsappUrl={done.whatsapp_url} onDone={onClose} />
+      ) : (
+        <form onSubmit={submit} className="space-y-4">
+          <p className="ct-meta">Their old password stops working immediately.</p>
+          <PasswordField id={`pw-${reseller.id}`} value={password} onChange={setPassword} />
+          {error && <p role="alert" className="rounded-[12px] bg-danger-soft px-3 py-2 text-[13px] font-medium text-danger">{error}</p>}
+          <button type="submit" disabled={saving} className="sh-save h-11">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            <span>Set new password</span>
+          </button>
+        </form>
+      )}
+    </Dialog>
   );
 }
 
 /* ------------------------------------------------------------------ add reseller */
 
-function AddResellerDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', limit: '10' });
+export interface AddPrefill {
+  requestId?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
+function AddResellerDialog({ prefill, onClose, onCreated }: { prefill: AddPrefill; onClose: () => void; onCreated: () => void }) {
+  const [form, setForm] = useState({ name: prefill.name ?? '', email: prefill.email ?? '', phone: prefill.phone ?? '', limit: '10' });
+  const [password, setPassword] = useState(() => generatePassword());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ message: string; whatsapp_url: string } | null>(null);
-  const { copied, copy } = useCopy();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -527,6 +602,8 @@ function AddResellerDialog({ onClose, onCreated }: { onClose: () => void; onCrea
         email: form.email,
         phone: form.phone,
         merchant_limit: form.limit,
+        password,
+        request_id: prefill.requestId,
       });
       setDone({ message: data.message, whatsapp_url: data.whatsapp_url });
       onCreated();
@@ -551,47 +628,73 @@ function AddResellerDialog({ onClose, onCreated }: { onClose: () => void; onCrea
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Add reseller">
-      <div className="w-full max-w-md rounded-t-[24px] bg-surface p-5 shadow-2xl sm:rounded-[24px] sm:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-[17px] font-bold text-ink">{done ? 'Reseller added' : 'Add reseller'}</h3>
-          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-2" aria-label="Close">
-            <X className="h-4 w-4" />
+    <Dialog title={done ? 'Reseller added' : prefill.requestId ? 'Approve request' : 'Add reseller'} onClose={onClose}>
+      {done ? (
+        <CredentialsResult message={done.message} whatsappUrl={done.whatsapp_url} onDone={onClose} />
+      ) : (
+        <form onSubmit={submit} className="space-y-4">
+          {field('name', 'Name', { required: true, placeholder: 'Full name or company', autoFocus: !prefill.name })}
+          {field('email', 'Email (their login)', { required: true, type: 'email', inputMode: 'email', placeholder: 'name@gmail.com' })}
+          {field('phone', 'WhatsApp phone', { required: true, type: 'tel', inputMode: 'tel', placeholder: '+212 6...' })}
+          <PasswordField id="add-password" value={password} onChange={setPassword} />
+          {field('limit', 'Card limit', { required: true, inputMode: 'numeric' })}
+          {error && <p role="alert" className="rounded-[12px] bg-danger-soft px-3 py-2 text-[13px] font-medium text-danger">{error}</p>}
+          <button type="submit" disabled={saving} className="sh-save h-11">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            <span>{prefill.requestId ? 'Create account' : 'Add reseller'}</span>
           </button>
-        </div>
+        </form>
+      )}
+    </Dialog>
+  );
+}
 
-        {done ? (
-          <div className="space-y-4">
-            <p className="ct-meta">
-              Their email can now sign in. Send them this message: they open the login page and continue with Google
-              or with an email code.
-            </p>
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-[14px] bg-surface-2 p-3 text-[12.5px] leading-relaxed text-ink-2">{done.message}</pre>
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => copy('msg', done.message)} className="ct-btn ct-btn-md border border-line bg-surface">
-                {copied === 'msg' ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />} Copy
-              </button>
-              <a href={done.whatsapp_url} target="_blank" rel="noreferrer" className="ct-btn ct-btn-md bg-[#25D366] text-white hover:brightness-95">
-                <MessageCircle className="h-4 w-4" /> WhatsApp
-              </a>
+/* ------------------------------------------------------------------ access requests */
+
+function RequestsSection({
+  requests,
+  onApprove,
+  run,
+  now,
+}: {
+  requests: AccessRequestRow[];
+  onApprove: (r: AccessRequestRow) => void;
+  run: (fn: () => Promise<unknown>) => Promise<void>;
+  now: number;
+}) {
+  if (requests.length === 0) return null;
+  return (
+    <section className="ct-card overflow-hidden">
+      <SectionHeader title="Access requests" count={requests.length} />
+      <ul className="divide-y divide-[var(--border)] border-t border-line">
+        {requests.map((r) => (
+          <li key={r.id} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-ink">
+                {r.name} <span className="ml-1 text-[12px] font-normal text-muted">{timeAgo(r.created_at, now)}</span>
+              </p>
+              <p className="truncate text-[12.5px] text-muted">
+                {r.email}
+                {r.phone && ` · ${r.phone}`}
+              </p>
+              {r.message && <p className="mt-1 text-[13px] text-ink-2">{r.message}</p>}
             </div>
-            <button type="button" onClick={onClose} className="sh-save h-11">Done</button>
-          </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-4">
-            {field('name', 'Name', { required: true, placeholder: 'Full name or company', autoFocus: true })}
-            {field('email', 'Email (their login)', { required: true, type: 'email', inputMode: 'email', placeholder: 'name@gmail.com' })}
-            {field('phone', 'WhatsApp phone', { required: true, type: 'tel', inputMode: 'tel', placeholder: '+212 6…' })}
-            {field('limit', 'Card limit', { required: true, inputMode: 'numeric' })}
-            {error && <p role="alert" className="rounded-[12px] bg-danger-soft px-3 py-2 text-[13px] font-medium text-danger">{error}</p>}
-            <button type="submit" disabled={saving} className="sh-save h-11">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              <span>Add reseller</span>
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => onApprove(r)} className="sh-btn-primary h-9 px-4 text-[13px]">
+                <Check className="h-4 w-4" /> Approve
+              </button>
+              <button
+                type="button"
+                onClick={() => run(() => send(`/api/admin/access-requests/${r.id}`, 'PATCH', { status: 'dismissed' }))}
+                className="ct-btn ct-btn-sm h-9 border border-line bg-surface px-3"
+              >
+                Dismiss
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

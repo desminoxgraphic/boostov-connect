@@ -95,14 +95,15 @@ test('password rules', () => {
 });
 
 test('reseller input: default limit 10, Grow off unless set', () => {
-  const r = validateResellerInput({ name: 'Karim', email: 'KARIM@Example.com ', phone: '+212 6 12 34 56 78' });
+  const r = validateResellerInput({ name: 'Karim', email: 'KARIM@Example.com ', phone: '+212 6 12 34 56 78', password: 'Kp7m-x9Qa-4tRb' });
   assert.ok(r.ok);
   if (r.ok) {
     assert.equal(r.value.merchant_limit, 10);
     assert.equal(r.value.grow_enabled, false);
     assert.equal(r.value.email, 'karim@example.com');
   }
-  assert.equal(validateResellerInput({ name: 'K', email: 'bad', phone: '0612345678' }).ok, false);
+  assert.equal(validateResellerInput({ name: 'K', email: 'bad', phone: '0612345678', password: 'Kp7m-x9Qa-4tRb' }).ok, false);
+  assert.equal(validateResellerInput({ name: 'K', email: 'k@example.com', phone: '0612345678', password: 'short' }).ok, false, 'admin must set a real password');
   assert.equal(parseMerchantLimit('-1'), null);
   assert.equal(parseMerchantLimit('25'), 25);
   assert.equal(parseMerchantLimit('2.5'), null);
@@ -266,16 +267,30 @@ test('tap counts are de-duplicated per visitor and the public key cannot write e
   assert.match(sql, /drop policy if exists "Public event insert"/);
 });
 
-test('one login page: invite-only, Google or email code, password only until the admin used it', () => {
-  const send = readFileSync(resolve('app/api/auth/otp/send/route.ts'), 'utf8');
-  assert.match(send, /invited_access/);
-  assert.match(send, /shouldCreateUser: false/);
-  const post = readFileSync(resolve('lib/post-login.ts'), 'utf8');
-  assert.match(post, /deleteUser\(ctx\.userId\)/, 'an uninvited Google sign-up is removed again');
-  const pw = readFileSync(resolve('app/api/auth/login/route.ts'), 'utf8');
-  assert.match(pw, /passwordLoginEnabled\(\)/);
-  assert.equal(pageRedirectFor('admin', 'login'), '/login');
-  assert.equal(pageRedirectFor('reseller', 'login'), '/login');
+test('sign-in is email + password at /connexion; admin sets reseller passwords', async () => {
+  const login = readFileSync(resolve('app/api/auth/login/route.ts'), 'utf8');
+  assert.match(login, /signInWithPassword/);
+  assert.match(login, /afterSignIn/);
+  assert.equal(pageRedirectFor('admin', 'login'), '/connexion');
+  assert.equal(pageRedirectFor('reseller', 'login'), '/connexion');
+  const create = readFileSync(resolve('app/api/admin/resellers/route.ts'), 'utf8');
+  assert.match(create, /password: input\.password/);
+  const reset = readFileSync(resolve('app/api/admin/resellers/[id]/password/route.ts'), 'utf8');
+  assert.match(reset, /requireApi\('admin'\)/);
+  const { generatePassword } = await import('../lib/password.ts');
+  for (let i = 0; i < 50; i++) {
+    const pw = generatePassword();
+    assert.equal(validatePassword(pw), null, pw);
+    assert.ok(!/[0O1lI]/.test(pw), 'no look-alike characters');
+  }
+});
+
+test('access requests are public to send but only the admin can read them', () => {
+  const sql = readFileSync(resolve('supabase/migrations/202610310003_access_requests.sql'), 'utf8');
+  assert.match(sql, /revoke all on public\.access_requests from anon, authenticated/);
+  const route = readFileSync(resolve('app/api/access-requests/route.ts'), 'utf8');
+  assert.match(route, /visitorId/);
+  assert.ok(!/export async function GET/.test(route), 'no public listing');
 });
 
 test('deleting a reseller is admin-only and needs the typed name', () => {

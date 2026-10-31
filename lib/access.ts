@@ -56,11 +56,11 @@ export function apiStatusFor(decision: Decision): number {
 export function pageRedirectFor(area: Area, decision: Decision): string | null {
   switch (decision) {
     case 'login':
-      return '/login';
+      return '/connexion';
     case 'mfa':
       return '/admin/mfa';
     case 'suspended':
-      return '/login?suspended=1';
+      return '/connexion?suspended=1';
     default:
       return null;
   }
