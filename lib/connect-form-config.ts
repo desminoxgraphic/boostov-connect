@@ -37,7 +37,7 @@ export const CONNECT_FORM_CONFIG: Record<ConnectFormVariant, ConnectFormConfig> 
     backLabel: 'Back to Admin',
     slugPrefix: '/connect/',
     maxGallery: CONNECT_GALLERY_MAX_IMAGES,
-    compress: false,
+    compress: true,
     ownTopBar: true,
     slugEditableOnEdit: true,
     afterSave: () => '/admin',

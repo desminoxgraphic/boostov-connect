@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { cookies, type UnsafeUnwrappedCookies } from 'next/headers';
 import { hardenCookie } from './cookie-options';
 
 export { hardenCookie };
@@ -17,7 +17,7 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
  * Postgres RLS with that user's JWT. Use in server components and route handlers.
  */
 export function createUserClient(): SupabaseClient {
-  const store = cookies();
+  const store = (cookies() as unknown as UnsafeUnwrappedCookies);
   return createServerClient(supabaseUrl, anonKey, {
     cookies: {
       getAll() {

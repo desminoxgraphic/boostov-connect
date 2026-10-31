@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 /** Every merchant in the system (yours and all resellers'), with taps. */
-export default async function AllMerchantsPage({ searchParams }: { searchParams: { reseller?: string } }) {
+export default async function AllMerchantsPage(props: { searchParams: Promise<{ reseller?: string }> }) {
+  const searchParams = await props.searchParams;
   const { merchants, resellers } = supabaseServer
     ? await loadAllMerchants(supabaseServer)
     : { merchants: [], resellers: [] };

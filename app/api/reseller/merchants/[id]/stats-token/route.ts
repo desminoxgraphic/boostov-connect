@@ -4,7 +4,8 @@ import { connectStatsUrl, growStatsUrl } from '@/lib/app-url';
 import { loadOwnedMerchant } from '@/lib/reseller-merchants';
 
 /** Issues a new secret stats link; the old one stops working immediately. */
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+export async function POST(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('reseller');
   if (!gate.ok) return gate.response;
   const { supabase } = gate.auth;

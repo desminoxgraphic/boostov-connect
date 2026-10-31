@@ -19,7 +19,8 @@ const NFC_STEPS = [
   'Test: tap the card with another phone. The page should open.',
 ];
 
-export default async function MerchantSharePage({ params }: { params: { id: string } }) {
+export default async function MerchantSharePage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { ctx, supabase } = await requirePage('reseller');
   const space = await loadResellerSpace(supabase, ctx.userId);
   const merchant = space?.merchants.find((m) => m.id === params.id);

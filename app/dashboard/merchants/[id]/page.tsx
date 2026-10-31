@@ -6,7 +6,8 @@ import ConnectBusinessEditForm from '@/components/ConnectBusinessEditForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EditMerchantPage({ params }: { params: { id: string } }) {
+export default async function EditMerchantPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase } = await requirePage('reseller');
   const { data } = await supabase.from('connect_businesses').select('id').eq('id', params.id).maybeSingle();
   if (!data) notFound();

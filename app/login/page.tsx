@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ResellerLoginPage({ searchParams }: { searchParams: { suspended?: string } }) {
+export default async function ResellerLoginPage(props: { searchParams: Promise<{ suspended?: string }> }) {
+  const searchParams = await props.searchParams;
   return (
     <div className="min-h-dvh bg-canvas text-ink">
       <AuthShell title="Boostov Partner" subtitle="Reseller space">

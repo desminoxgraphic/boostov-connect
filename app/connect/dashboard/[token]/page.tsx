@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, use } from 'react';
 import { ConnectBusiness, ConnectLink, ConnectAnalyticsSummary, ConnectActionStat } from '@/lib/connect-types';
 import ConnectPlatformIcon from '@/components/ConnectPlatformIcon';
 import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
@@ -30,7 +30,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface PageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
 const ICON = 'h-[17px] w-[17px]';
@@ -145,7 +145,8 @@ function RateRing({ value }: { value: number }) {
   );
 }
 
-export default function MerchantAnalyticsDashboardPage({ params }: PageProps) {
+export default function MerchantAnalyticsDashboardPage(props: PageProps) {
+  const params = use(props.params);
   const [business, setBusiness] = useState<ConnectBusiness | null>(null);
   const [links, setLinks] = useState<ConnectLink[]>([]);
   const [summary, setSummary] = useState<ConnectAnalyticsSummary | null>(null);

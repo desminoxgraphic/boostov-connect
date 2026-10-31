@@ -5,7 +5,8 @@ import { merchantPublicUrl } from '@/lib/app-url';
 import { loadOwnedMerchant } from '@/lib/reseller-merchants';
 
 /** Downloadable PNG QR code of the merchant's public link. */
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('reseller');
   if (!gate.ok) return gate.response;
 

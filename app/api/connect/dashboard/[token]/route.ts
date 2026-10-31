@@ -4,10 +4,8 @@ import {
   getConnectAnalyticsSummary,
 } from '@/lib/connect-db';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { token: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   try {
     const data = await getConnectBusinessByDashboardToken(params.token);
     if (!data) {

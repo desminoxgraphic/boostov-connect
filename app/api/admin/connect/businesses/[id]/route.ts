@@ -8,10 +8,8 @@ import {
 } from '@/lib/connect-db';
 import { pickConnectBusinessFields } from '@/lib/connect-utils';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('admin');
   if (!gate.ok) return gate.response;
 
@@ -30,10 +28,8 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('admin');
   if (!gate.ok) return gate.response;
 
@@ -51,10 +47,8 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('admin');
   if (!gate.ok) return gate.response;
 

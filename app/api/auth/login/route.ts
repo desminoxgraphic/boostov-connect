@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const area = body.area === 'admin' ? 'admin' : 'reseller';
   if (!email || !password) return NextResponse.json({ error: GENERIC }, { status: 400 });
 
-  const supabase = createUserClient();
+  const supabase = await createUserClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     if (/banned/i.test(error.message)) return NextResponse.json({ error: SUSPENDED }, { status: 403 });

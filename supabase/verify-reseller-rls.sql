@@ -38,9 +38,9 @@ end $$;
 do $$ begin
   insert into public.connect_events (business_id, event_type)
   select id, 'view' from (values ('00000000-0000-4000-8000-00000000b001'::uuid)) v(id);
-  insert into verify_result values ('anon_event_insert', 'ok');
+  insert into verify_result values ('anon_event_insert', 'ALLOWED');
 exception when others then
-  insert into verify_result values ('anon_event_insert', sqlerrm);
+  insert into verify_result values ('anon_event_insert', 'blocked');
 end $$;
 reset role;
 
@@ -160,7 +160,7 @@ do $$
 declare
   expected jsonb := jsonb_build_object(
     'anon_connect_rows', 'blocked',
-    'anon_event_insert', 'ok',
+    'anon_event_insert', 'blocked',
     'a_sees_b', '0',
     'a_own_rows', '2',
     'a_token_generated', 'true',

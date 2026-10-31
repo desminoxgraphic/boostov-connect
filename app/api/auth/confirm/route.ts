@@ -27,8 +27,8 @@ export async function POST(request: Request) {
 
   if (!tokenHash) return NextResponse.redirect(new URL('/auth/confirm?error=invalid', base), 303);
 
-  const store = cookies();
-  const supabase = createUserClient();
+  const store = await cookies();
+  const supabase = await createUserClient();
   const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
 
   if (error) {

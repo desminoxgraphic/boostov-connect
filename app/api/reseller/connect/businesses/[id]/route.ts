@@ -18,7 +18,8 @@ async function ownedId(supabase: SupabaseClient, id: string): Promise<boolean> {
   return !!data;
 }
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('reseller');
   if (!gate.ok) return gate.response;
   if (!(await ownedId(gate.auth.supabase, params.id))) {
@@ -30,7 +31,8 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 }
 
 /** Same payload as the admin edit form. The slug (programmed on cards) and owner never change. */
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('reseller');
   if (!gate.ok) return gate.response;
   const { ctx, supabase } = gate.auth;

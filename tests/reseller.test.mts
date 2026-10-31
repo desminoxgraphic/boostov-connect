@@ -245,3 +245,23 @@ test('migration closes the token leak and enforces reseller rules in the databas
   assert.ok(!/drop column/i.test(sql), 'migration must be additive');
   assert.ok(!/drop table/i.test(sql), 'migration must be additive');
 });
+
+test('public cards are rendered on the server and never fetch the card in the browser', () => {
+  const view = readFileSync(resolve('components/ConnectProfileView.tsx'), 'utf8');
+  assert.ok(!view.includes('/api/connect/profile'));
+  for (const page of ['app/connect/[slug]/page.tsx', 'app/m/[slug]/page.tsx']) {
+    assert.match(readFileSync(resolve(page), 'utf8'), /loadPublicCard/);
+  }
+  const loader = readFileSync(resolve('lib/public-card.ts'), 'utf8');
+  assert.match(loader, /dashboard_token: _token/);
+  const config = readFileSync(resolve('next.config.js'), 'utf8');
+  assert.ok(!/unoptimized:\s*true/.test(config), 'images must be optimized');
+});
+
+test('tap counts are de-duplicated per visitor and the public key cannot write events', () => {
+  const route = readFileSync(resolve('app/api/connect/events/route.ts'), 'utf8');
+  assert.match(route, /visitorId\(request\.headers\)/);
+  assert.match(route, /MAX_EVENTS_PER_VISITOR_HOUR/);
+  const sql = readFileSync(resolve('supabase/migrations/202610310001_protect_tap_counts.sql'), 'utf8');
+  assert.match(sql, /drop policy if exists "Public event insert"/);
+});

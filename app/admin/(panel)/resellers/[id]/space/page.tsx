@@ -13,7 +13,8 @@ export const dynamic = 'force-dynamic';
  * No impersonation: the data is loaded with the admin's server access and every
  * control that would change something is disabled.
  */
-export default async function ResellerSpacePreviewPage({ params }: { params: { id: string } }) {
+export default async function ResellerSpacePreviewPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   if (!supabaseServer) notFound();
   const space = await loadResellerSpace(supabaseServer, params.id);
   if (!space) notFound();

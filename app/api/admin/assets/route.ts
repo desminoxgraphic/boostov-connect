@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       .from(bucket)
       .upload(path, await file.arrayBuffer(), {
         contentType: file.type,
-        cacheControl: '3600',
+        cacheControl: '31536000',
         upsert: true,
       });
 

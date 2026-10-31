@@ -9,7 +9,8 @@ import { RESELLER_COLS, type ResellerRow } from '@/lib/reseller-data';
  * Changes a reseller's limit, Grow flag or status. Lowering the limit or
  * suspending never touches their merchants: those keep working publicly.
  */
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('admin');
   if (!gate.ok) return gate.response;
   const service = supabaseServer;

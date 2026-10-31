@@ -15,7 +15,7 @@ export interface Authorized {
 
 /** For server components and layouts: redirects or 404s unless allowed. */
 export async function requirePage(area: Area): Promise<Authorized> {
-  const supabase = createUserClient();
+  const supabase = await createUserClient();
   const ctx = await loadAccessContext(supabase);
   const decision = decideAccess(area, ctx);
   if (decision === 'allow' && ctx) return { ctx, supabase };
@@ -28,7 +28,7 @@ export async function requirePage(area: Area): Promise<Authorized> {
 export async function requireApi(
   area: Area
 ): Promise<{ ok: true; auth: Authorized } | { ok: false; response: NextResponse }> {
-  const supabase = createUserClient();
+  const supabase = await createUserClient();
   const ctx = await loadAccessContext(supabase);
   const decision = decideAccess(area, ctx);
   if (decision === 'allow' && ctx) return { ok: true, auth: { ctx, supabase } };

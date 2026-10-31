@@ -4,7 +4,8 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { generateResellerLink } from '@/lib/reseller-admin';
 
 /** New setup link (password never set) or reset link (password already set). */
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+export async function POST(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const gate = await requireApi('admin');
   if (!gate.ok) return gate.response;
   const service = supabaseServer;

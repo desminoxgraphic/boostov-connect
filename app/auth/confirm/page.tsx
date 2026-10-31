@@ -12,11 +12,12 @@ export const metadata: Metadata = {
  * one-time token is only used when the person presses Continue (a POST),
  * so link previews in WhatsApp cannot consume it.
  */
-export default function ConfirmLinkPage({
-  searchParams,
-}: {
-  searchParams: { token_hash?: string; error?: string };
-}) {
+export default async function ConfirmLinkPage(
+  props: {
+    searchParams: Promise<{ token_hash?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const tokenHash = searchParams.token_hash || '';
   const failed = searchParams.error === 'expired' || searchParams.error === 'invalid' || !tokenHash;
 

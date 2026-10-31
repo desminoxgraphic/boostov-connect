@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const problem = validatePassword(password);
   if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
-  const supabase = createUserClient();
+  const supabase = await createUserClient();
   const ctx = await loadAccessContext(supabase);
   if (!ctx || !ctx.role) {
     return NextResponse.json({ error: 'This link has expired. Ask Boostov for a new one.' }, { status: 401 });

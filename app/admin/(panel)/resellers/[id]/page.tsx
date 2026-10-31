@@ -9,7 +9,8 @@ import ResellerControls from '@/components/ResellerControls';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ResellerDetailPage({ params }: { params: { id: string } }) {
+export default async function ResellerDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   if (!supabaseServer) notFound();
   const space = await loadResellerSpace(supabaseServer, params.id);
   if (!space) notFound();

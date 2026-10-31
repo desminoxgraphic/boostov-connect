@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ConnectBusiness, ConnectLink } from '@/lib/connect-types';
 import { downloadVCard } from '@/lib/vcard';
@@ -86,6 +86,7 @@ function actionIcon(action: ConnectActionDefinition, className: string): React.R
 }
 
 export default function ConnectPublicCard({ business, links, onTrack }: ConnectPublicCardProps) {
+  const [coverLoaded, setCoverLoaded] = useState(false);
   const appearance = useConnectAppearance();
 
   /* Pointer tilt for the floating logo. Writes two custom properties on one
@@ -256,17 +257,23 @@ export default function ConnectPublicCard({ business, links, onTrack }: ConnectP
         {/* ---------------- HERO: the floating logo ---------------- */}
         <header className="bc-hero" onPointerMove={handleTilt} onPointerLeave={resetTilt}>
           <div className="bc-hero-media">
-            {business.cover_image_url ? (
+            {/* The themed backdrop sits under the banner, so the hero is never
+             * blank while the photo is still arriving. */}
+            <div aria-hidden className="bc-hero-fallback" />
+            {business.cover_image_url && (
               <Image
                 src={business.cover_image_url}
                 alt=""
                 fill
                 priority
-                sizes="440px"
-                className="object-cover"
+                sizes="(max-width: 480px) 100vw, 440px"
+                className={cn(
+                  'object-cover transition-opacity duration-500',
+                  coverLoaded ? 'opacity-100' : 'opacity-0'
+                )}
+                onLoad={() => setCoverLoaded(true)}
+                onError={() => setCoverLoaded(true)}
               />
-            ) : (
-              <div aria-hidden className="bc-hero-fallback" />
             )}
           </div>
           <div aria-hidden className="bc-hero-tint" />
@@ -297,6 +304,7 @@ export default function ConnectPublicCard({ business, links, onTrack }: ConnectP
                     fallbackTone="accent"
                     className="bc-orb-logo h-[128px] w-[128px]"
                     imageClassName="p-3.5"
+                    priority
                   />
                   <span aria-hidden className="bc-orb-gloss" />
                 </div>
