@@ -339,6 +339,7 @@ function ResellerActions({
   appUrl: string;
 }) {
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const suspended = reseller.status === 'suspended';
   const toggleStatus = async () => {
     if (!suspended && !confirm(`Suspend ${reseller.name}? They lose access right away. Their cards stay online.`)) return;
@@ -365,6 +366,10 @@ function ResellerActions({
       >
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : suspended ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
       </IconButton>
+      <IconButton label="Delete reseller completely" onClick={() => setDeleting(true)} tone="danger">
+        <Trash2 className="h-4 w-4" />
+      </IconButton>
+      {deleting && <DeleteResellerDialog reseller={reseller} onClose={() => setDeleting(false)} run={run} />}
       <details className="relative">
         <summary className="ct-btn ct-btn-icon h-9 w-9 cursor-pointer list-none border border-line bg-surface hover:bg-surface-2" aria-label="More">
           <MoreHorizontal className="h-4 w-4" />
@@ -383,6 +388,78 @@ function ResellerActions({
           </button>
         </div>
       </details>
+    </div>
+  );
+}
+
+function DeleteResellerDialog({
+  reseller,
+  onClose,
+  run,
+}: {
+  reseller: ResellerOverviewRow;
+  onClose: () => void;
+  run: (fn: () => Promise<unknown>) => Promise<void>;
+}) {
+  const [typed, setTyped] = useState('');
+  const [working, setWorking] = useState(false);
+  const matches = typed.trim() === reseller.name.trim();
+
+  const confirmDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!matches || working) return;
+    setWorking(true);
+    await run(() => send(`/api/admin/resellers/${reseller.id}`, 'DELETE', { confirm_name: typed.trim() }));
+    setWorking(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Delete reseller">
+      <form onSubmit={confirmDelete} className="w-full max-w-md space-y-4 rounded-t-[24px] bg-surface p-5 text-left shadow-2xl sm:rounded-[24px] sm:p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[17px] font-bold text-danger">Delete {reseller.name}?</h3>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full hover:bg-surface-2" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-2 rounded-[14px] border border-danger-border bg-danger-soft p-3.5 text-[13px] leading-relaxed text-danger">
+          <p className="font-semibold">This deletes everything and cannot be undone:</p>
+          <ul className="list-disc space-y-0.5 pl-5">
+            <li>their account and access ({reseller.email})</li>
+            <li>
+              their {reseller.cards} {reseller.cards === 1 ? 'card' : 'cards'}
+              {reseller.cards > 0 && ': the NFC links stop working'}
+            </li>
+            <li>the cards&apos; stats and uploaded images</li>
+          </ul>
+        </div>
+        <div>
+          <label className="ct-label" htmlFor={`del-${reseller.id}`}>
+            Type <span className="font-bold text-ink">{reseller.name}</span> to confirm
+          </label>
+          <input
+            id={`del-${reseller.id}`}
+            autoFocus
+            autoComplete="off"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            className="ct-control"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={onClose} className="ct-btn ct-btn-md border border-line bg-surface">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!matches || working}
+            className="ct-btn ct-btn-md bg-danger text-white disabled:opacity-40"
+          >
+            {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Delete
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

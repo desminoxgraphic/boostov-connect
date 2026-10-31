@@ -277,3 +277,11 @@ test('one login page: invite-only, Google or email code, password only until the
   assert.equal(pageRedirectFor('admin', 'login'), '/login');
   assert.equal(pageRedirectFor('reseller', 'login'), '/login');
 });
+
+test('deleting a reseller is admin-only and needs the typed name', () => {
+  const route = readFileSync(resolve('app/api/admin/resellers/[id]/route.ts'), 'utf8');
+  const del = route.slice(route.indexOf('export async function DELETE'));
+  assert.match(del, /requireApi\('admin'\)/);
+  assert.match(del, /confirm_name/);
+  assert.ok(del.indexOf("from('connect_businesses')") < del.indexOf('deleteUser'), 'cards are removed before the login');
+});
