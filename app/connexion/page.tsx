@@ -37,9 +37,9 @@ export default async function ConnexionPage(props: { searchParams: Promise<{ err
             <PasswordLoginForm initialError={initialError} supportUrl={supportUrl} />
           </div>
           <p className="mt-6 border-t border-black/[0.06] pt-5 text-center text-[14px] text-[#5b6478]">
-            Pas encore d’accès ?{' '}
-            <Link href="/#acces" className="font-semibold text-[#1d5cff] hover:underline">
-              Demander un accès
+            Pas encore revendeur ?{' '}
+            <Link href="/#devenir-revendeur" className="font-semibold text-[#1d5cff] hover:underline">
+              Devenir revendeur
             </Link>
           </p>
         </div>

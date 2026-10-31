@@ -37,7 +37,7 @@ export default function AccessRequestForm() {
         <CheckCircle2 className="h-12 w-12 text-[#16a34a]" />
         <p className="text-[18px] font-bold text-[#0b1530]">Demande envoyée</p>
         <p className="max-w-[32ch] text-[14.5px] text-[#5b6478]">
-          Nous vous contactons rapidement avec votre e-mail et votre mot de passe.
+          Boostov vous contacte rapidement pour vous présenter le Starter Kit.
         </p>
       </div>
     );
@@ -57,7 +57,7 @@ export default function AccessRequestForm() {
       <div>
         <label htmlFor="rq-email" className="mb-1.5 block text-[13.5px] font-semibold text-[#0b1530]">E-mail</label>
         <input id="rq-email" type="email" inputMode="email" required value={form.email} onChange={set('email')} className={input} autoComplete="email" />
-        <p className="mt-1.5 text-[12.5px] text-[#7a8296]">Il servira à vous connecter.</p>
+        <p className="mt-1.5 text-[12.5px] text-[#7a8296]">Il servira à vous connecter à votre espace.</p>
       </div>
       <div>
         <label htmlFor="rq-phone" className="mb-1.5 block text-[13.5px] font-semibold text-[#0b1530]">WhatsApp</label>
@@ -80,7 +80,7 @@ export default function AccessRequestForm() {
         className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#1d5cff] text-[15px] font-semibold text-white shadow-[0_10px_24px_-12px_rgba(29,92,255,0.9)] transition hover:bg-[#164de0] disabled:opacity-60"
       >
         {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-        Envoyer ma demande
+        Recevoir mon Starter Kit
       </button>
     </form>
   );
