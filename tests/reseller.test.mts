@@ -313,3 +313,19 @@ test('Boostov support WhatsApp is 0709272476', () => {
   assert.match(src, /'\+212709272476'/);
   assert.equal(whatsappDigits('0709272476'), '212709272476');
 });
+
+test('every card has a QR button with download, and a delete button (admin + reseller)', () => {
+  const qr = readFileSync(resolve('components/QrDialog.tsx'), 'utf8');
+  assert.match(qr, /download=\{`qr-\$\{fileName\}\.png`\}/);
+  const admin = readFileSync(resolve('components/admin/AdminHome.tsx'), 'utf8');
+  assert.match(admin, /label="QR code"/);
+  assert.match(admin, /label="Delete card"/);
+  const reseller = readFileSync(resolve('components/ResellerCardActions.tsx'), 'utf8');
+  assert.match(reseller, /QrDialog/);
+  assert.match(reseller, /method: 'DELETE'/);
+  const route = readFileSync(resolve('app/api/reseller/connect/businesses/[id]/route.ts'), 'utf8');
+  const del = route.slice(route.indexOf('export async function DELETE'));
+  assert.match(del, /requireApi\('reseller'\)/);
+  assert.match(del, /ownedId\(supabase, params\.id\)/);
+  assert.match(del, /\.eq\('reseller_id', ctx\.userId\)/);
+});

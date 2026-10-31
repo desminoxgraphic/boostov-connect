@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,6 +17,7 @@ import {
   Play,
   Plus,
   Power,
+  QrCode,
   KeyRound,
   RefreshCw,
   Trash2,
@@ -23,6 +25,7 @@ import {
 } from 'lucide-react';
 import { generatePassword } from '@/lib/password';
 import ConnectLogoAvatar from '@/components/ConnectLogoAvatar';
+import QrDialog from '@/components/QrDialog';
 import { cn } from '@/lib/utils';
 import type { AccessRequestRow, AdminCardRow, AdminOverview, ResellerOverviewRow } from '@/lib/admin-overview';
 
@@ -431,7 +434,7 @@ function DeleteResellerDialog({
     onClose();
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Delete reseller">
       <form onSubmit={confirmDelete} className="w-full max-w-md space-y-4 rounded-t-[24px] bg-surface p-5 text-left shadow-2xl sm:rounded-[24px] sm:p-6">
         <div className="flex items-center justify-between">
@@ -477,7 +480,8 @@ function DeleteResellerDialog({
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -521,7 +525,7 @@ function PasswordField({ value, onChange, id }: { value: string; onChange: (v: s
 }
 
 function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
       <div className="w-full max-w-md rounded-t-[24px] bg-surface p-5 text-left shadow-2xl sm:rounded-[24px] sm:p-6">
         <div className="mb-4 flex items-center justify-between">
@@ -532,7 +536,8 @@ function Dialog({ title, onClose, children }: { title: string; onClose: () => vo
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -754,7 +759,13 @@ function CardsSection({
 
 function CardRow({ card, run }: { card: AdminCardRow; run: (fn: () => Promise<unknown>) => Promise<void> }) {
   const { copied, copy } = useCopy();
+  const [showQr, setShowQr] = useState(false);
   const path = card.link.replace(/^https?:\/\/[^/]+/, '');
+  const remove = () => {
+    if (confirm(`Delete "${card.name}"?\n\nIts link and QR code stop working, and its stats are deleted. This cannot be undone.`)) {
+      run(() => send(`/api/admin/connect/businesses/${card.id}`, 'DELETE'));
+    }
+  };
 
   return (
     <li className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2.5 px-4 py-3 sm:flex sm:px-5">
@@ -775,6 +786,9 @@ function CardRow({ card, run }: { card: AdminCardRow; run: (fn: () => Promise<un
         <p className="text-[11px] text-muted">+{card.taps_7d} 7d</p>
       </div>
       <div className="col-span-2 flex items-center gap-1.5 pl-12 sm:pl-0">
+        <IconButton label="QR code" onClick={() => setShowQr(true)}>
+          <QrCode className="h-4 w-4" />
+        </IconButton>
         <IconButton label="Copy card link" onClick={() => copy('link', card.link)}>
           {copied === 'link' ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
         </IconButton>
@@ -783,6 +797,9 @@ function CardRow({ card, run }: { card: AdminCardRow; run: (fn: () => Promise<un
         </a>
         <IconButton label="Edit card" href={`/admin/connect/${card.id}`}>
           <Edit className="h-4 w-4" />
+        </IconButton>
+        <IconButton label="Delete card" onClick={remove} tone="danger">
+          <Trash2 className="h-4 w-4" />
         </IconButton>
         <details className="relative">
           <summary className="ct-btn ct-btn-icon h-9 w-9 cursor-pointer list-none border border-line bg-surface hover:bg-surface-2" aria-label="More">
@@ -799,20 +816,10 @@ function CardRow({ card, run }: { card: AdminCardRow; run: (fn: () => Promise<un
             >
               <Power className="h-4 w-4" /> {card.is_active ? 'Turn off' : 'Turn on'}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm(`Delete "${card.name}"? Its link stops working. This cannot be undone.`)) {
-                  run(() => send(`/api/admin/connect/businesses/${card.id}`, 'DELETE'));
-                }
-              }}
-              className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left text-[13px] text-danger hover:bg-danger-soft"
-            >
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
           </div>
         </details>
       </div>
+      {showQr && <QrDialog url={card.link} name={card.name} fileName={card.slug} onClose={() => setShowQr(false)} />}
     </li>
   );
 }

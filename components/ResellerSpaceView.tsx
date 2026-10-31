@@ -2,18 +2,17 @@ import Link from 'next/link';
 import {
   BarChart2,
   Check,
-  Edit,
   ExternalLink,
   MessageCircle,
   Nfc,
   Plus,
-  QrCode,
   Radio,
   Store,
   TrendingUp,
 } from 'lucide-react';
 import ConnectLogoAvatar from './ConnectLogoAvatar';
 import CopyButton from './CopyButton';
+import ResellerCardActions from './ResellerCardActions';
 import { cn } from '@/lib/utils';
 import { BOOSTOV_SUPPORT_WHATSAPP, buildWhatsAppUrl } from '@/lib/app-url';
 import type { ResellerSpace } from '@/lib/reseller-data';
@@ -239,14 +238,7 @@ export default function ResellerSpaceView({ space, readOnly = false }: { space: 
                   <BarChart2 className="h-3.5 w-3.5 text-brand-text" />
                   <span>Stats</span>
                 </a>
-                <div className="flex items-center gap-2">
-                  <ActionLink href={`/dashboard/merchants/${m.id}/share`} disabled={readOnly} label="Link & QR">
-                    <QrCode className="h-4 w-4" />
-                  </ActionLink>
-                  <ActionLink href={`/dashboard/merchants/${m.id}`} disabled={readOnly} label="Edit">
-                    <Edit className="h-4 w-4" />
-                  </ActionLink>
-                </div>
+                <ResellerCardActions id={m.id} name={m.name} slug={m.slug} publicUrl={m.public_url} readOnly={readOnly} />
               </div>
             </article>
           ))}
@@ -262,31 +254,5 @@ function HeroStat({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/60">{label}</p>
       <p className="ct-num mt-0.5 text-[20px] font-bold text-white">{value}</p>
     </div>
-  );
-}
-
-function ActionLink({
-  href,
-  disabled,
-  label,
-  children,
-}: {
-  href: string;
-  disabled: boolean;
-  label: string;
-  children: React.ReactNode;
-}) {
-  const className = 'ct-btn ct-btn-icon h-10 w-10 border border-line bg-surface';
-  if (disabled) {
-    return (
-      <span aria-disabled title={`${label} (read only)`} className={cn(className, 'pointer-events-none opacity-40')}>
-        {children}
-      </span>
-    );
-  }
-  return (
-    <Link href={href} title={label} aria-label={label} className={className}>
-      {children}
-    </Link>
   );
 }

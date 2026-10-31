@@ -73,3 +73,31 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     return NextResponse.json({ error }, { status });
   }
 }
+
+/**
+ * A reseller deletes one of their own cards: the card, its links, its stats and
+ * its uploaded images. Its NFC link and QR code stop working.
+ */
+export async function DELETE(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const gate = await requireApi('reseller');
+  if (!gate.ok) return gate.response;
+  const { ctx, supabase } = gate.auth;
+  if (!(await ownedId(supabase, params.id))) {
+    return NextResponse.json({ error: 'Business profile not found.' }, { status: 404 });
+  }
+  if (!supabaseServer) return NextResponse.json({ error: 'Database is not configured.' }, { status: 503 });
+
+  const { error } = await supabaseServer
+    .from('connect_businesses')
+    .delete()
+    .eq('id', params.id)
+    .eq('reseller_id', ctx.userId);
+  if (error) return NextResponse.json({ error: 'Could not delete the card.' }, { status: 500 });
+
+  const folder = `resellers/${ctx.userId}/${params.id}`;
+  const { data: files } = await supabaseServer.storage.from('business-assets').list(folder, { limit: 1000 });
+  await deleteStorageObjects(supabaseServer, (files ?? []).map((f) => `${folder}/${f.name}`));
+
+  return NextResponse.json({ deleted: true });
+}
