@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireApi } from '@/lib/authz';
 import { supabaseServer } from '@/lib/supabase/server';
 import { validateResellerInput } from '@/lib/reseller-validation';
-import { generateResellerLink } from '@/lib/reseller-admin';
+import { resellerInviteMessage } from '@/lib/reseller-admin';
+import { buildWhatsAppUrl } from '@/lib/app-url';
 import { loadResellers } from '@/lib/reseller-data';
 
 export async function GET() {
@@ -12,7 +13,11 @@ export async function GET() {
   return NextResponse.json({ resellers: await loadResellers(supabaseServer) });
 }
 
-/** Creates the reseller's Auth user (no email is sent) and returns a setup link. */
+/**
+ * Invites a reseller: their email is added to the allowed list (an Auth user
+ * with no password, plus the reseller role). No email is sent; they simply sign
+ * in at /login with Google or an email code.
+ */
 export async function POST(request: Request) {
   const gate = await requireApi('admin');
   if (!gate.ok) return gate.response;
@@ -44,28 +49,27 @@ export async function POST(request: Request) {
   const userId = created.user.id;
 
   const { error: roleError } = await service.from('user_roles').insert({ user_id: userId, role: 'reseller' });
-  const { data: reseller, error: resellerError } = roleError
-    ? { data: null, error: roleError }
-    : await service
-        .from('resellers')
-        .insert({
-          id: userId,
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
-          merchant_limit: input.merchant_limit,
-          grow_enabled: input.grow_enabled,
-          status: 'pending',
-        })
-        .select('id, name, email, phone, password_set_at')
-        .single();
+  const { error: resellerError } = roleError
+    ? { error: roleError }
+    : await service.from('resellers').insert({
+        id: userId,
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        merchant_limit: input.merchant_limit,
+        grow_enabled: input.grow_enabled,
+        status: 'pending',
+      });
 
-  if (resellerError || !reseller) {
-    console.error('Reseller create failed:', resellerError?.message);
-    await service.auth.admin.deleteUser(userId); // cascades the role row
+  if (resellerError) {
+    console.error('Reseller create failed:', resellerError.message);
+    await service.auth.admin.deleteUser(userId);
     return NextResponse.json({ error: 'Could not create the reseller.' }, { status: 500 });
   }
 
-  const link = await generateResellerLink(service, reseller);
-  return NextResponse.json({ id: userId, ...('error' in link ? { link_error: link.error } : link) }, { status: 201 });
+  const message = resellerInviteMessage(input.name, input.email);
+  return NextResponse.json(
+    { id: userId, message, whatsapp_url: buildWhatsAppUrl(input.phone, message) },
+    { status: 201 }
+  );
 }

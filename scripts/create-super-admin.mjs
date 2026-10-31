@@ -1,11 +1,11 @@
-// One-time bootstrap of the super admin account. Run locally, never deployed:
+// Bootstrap AND emergency access for the super admin. Run locally, never deployed:
 //
 //   node scripts/create-super-admin.mjs you@example.com
 //
 // Reads NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_APP_URL
 // from .env.local (or the environment). Creates the Auth user if needed, gives it
-// the super_admin role and prints a one-time link to set the password. After
-// that, sign in at /admin/login and set up the authenticator app.
+// the super_admin role and prints a one-time sign-in link (valid about 1 hour).
+// Use it if you are ever locked out; normal sign-in is /login (Google or email code).
 import { readFileSync, existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 
@@ -66,12 +66,12 @@ if (roleError) {
   process.exit(1);
 }
 
-const { data: link, error: linkError } = await admin.auth.admin.generateLink({ type: 'recovery', email });
+const { data: link, error: linkError } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
 if (linkError || !link?.properties?.hashed_token) {
   console.error('Could not generate the link:', linkError?.message);
   process.exit(1);
 }
 
-console.log('\nSuper admin ready. Open this link once to choose your password:\n');
-console.log(`${appUrl}/auth/confirm?token_hash=${encodeURIComponent(link.properties.hashed_token)}&type=recovery\n`);
-console.log('After that, sign in at /admin/login with your email and password.');
+console.log('\nSuper admin ready. Open this one-time sign-in link (works once, about 1 hour):\n');
+console.log(`${appUrl}/auth/confirm?token_hash=${encodeURIComponent(link.properties.hashed_token)}\n`);
+console.log('Normal sign-in: /login with Google or an email code.');

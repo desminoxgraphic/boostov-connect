@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import BrandMark from './BrandMark';
 import { Lock } from 'lucide-react';
 
 /** Centered sign-in card shared by every auth screen (admin, reseller, links). */
@@ -21,7 +21,7 @@ export default function AuthShell({
       <div className="sh-rise relative w-full max-w-sm">
         <div className="mb-7 text-center">
           <div className="sh-brand-mark mx-auto h-16 w-16 rounded-[22px]">
-            <Image src="/boostov-logo.png" alt="" width={46} height={46} priority />
+            <BrandMark size={46} priority />
           </div>
           <h1 className="ct-display mt-5 text-[28px]">{title}</h1>
           <p className="mt-1.5 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted">

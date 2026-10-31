@@ -1,10 +1,6 @@
-import AuthShell from '@/components/AuthShell';
-import SignInForm from '@/components/SignInForm';
+import { redirect } from 'next/navigation';
 
+/** Old admin sign-in address; everyone now signs in at /login. */
 export default function AdminLoginPage() {
-  return (
-    <AuthShell title="Boostov Admin" subtitle="Management portal">
-      <SignInForm area="admin" />
-    </AuthShell>
-  );
+  redirect('/login');
 }

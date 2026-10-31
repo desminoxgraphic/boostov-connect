@@ -1358,7 +1358,7 @@ a.bc-bento-solid:hover .bc-row-go {
 
 :root[data-appearance='dark'] .connect-scope .bc-powered-mark,
 .dark .bc-powered-mark {
-  background: #ffffff;
+  background: transparent;
   padding: 1px;
 }
 
@@ -2057,3 +2057,10 @@ a.bc-bento-solid:hover .bc-row-go {
     transform: none;
   }
 }
+
+/* Official Boostov mark: light version by default, white-stem version on dark. */
+.brand-dark { display: none; }
+.dark .brand-light,
+:root[data-appearance='dark'] .connect-scope .brand-light { display: none; }
+.dark .brand-dark,
+:root[data-appearance='dark'] .connect-scope .brand-dark { display: inline-block; }

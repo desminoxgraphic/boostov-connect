@@ -23,9 +23,9 @@ export default async function ConfirmLinkPage(
 
   return (
     <div className="min-h-dvh bg-canvas text-ink">
-      <AuthShell title="Welcome to Boostov" subtitle="Secure account link">
+      <AuthShell title="Welcome to Boostov" subtitle="One-time sign-in link">
         {failed ? (
-          <FormError message="This link has expired or was already used. Ask Boostov to send you a new one." />
+          <FormError message="This link has expired or was already used. Sign in at /login instead." />
         ) : (
           <ConfirmLinkForm tokenHash={tokenHash} />
         )}

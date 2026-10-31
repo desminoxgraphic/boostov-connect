@@ -16,7 +16,7 @@ export default function ConfirmLinkForm({ tokenHash }: { tokenHash: string }) {
         else setSent(true);
       }}
     >
-      <p className="ct-meta">Press Continue to choose your password.</p>
+      <p className="ct-meta">Press Continue to sign in.</p>
       <input type="hidden" name="token_hash" value={tokenHash} />
       <button type="submit" aria-disabled={sent} className="sh-save h-12">
         {sent ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

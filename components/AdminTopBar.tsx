@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import BrandMark from './BrandMark';
 import { cn } from '@/lib/utils';
 
 /**
@@ -30,7 +30,7 @@ export default function AdminTopBar({
         <div className="flex min-w-0 items-center gap-3">
           {leading ?? (
             <span className="sh-brand-mark" aria-hidden>
-              <Image src="/boostov-logo.png" alt="" width={30} height={30} />
+              <BrandMark size={30} />
             </span>
           )}
           <div className="min-w-0">

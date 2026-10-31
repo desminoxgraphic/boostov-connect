@@ -25,7 +25,6 @@ export type Decision =
   | 'allow'
   | 'login'
   | 'mfa'
-  | 'set-password'
   | 'suspended'
   | 'forbidden';
 
@@ -42,7 +41,8 @@ export function decideAccess(area: Area, ctx: AccessContext | null): Decision {
 
   if (ctx.role !== 'reseller') return 'forbidden';
   if (ctx.resellerStatus === 'suspended' || ctx.resellerStatus === null) return 'suspended';
-  if (ctx.resellerStatus === 'pending') return 'set-password';
+  // An invited reseller becomes active on first sign-in (see lib/post-login.ts).
+  if (ctx.resellerStatus === 'pending') return 'login';
   return 'allow';
 }
 
@@ -56,11 +56,9 @@ export function apiStatusFor(decision: Decision): number {
 export function pageRedirectFor(area: Area, decision: Decision): string | null {
   switch (decision) {
     case 'login':
-      return area === 'reseller' ? '/login' : '/admin/login';
+      return '/login';
     case 'mfa':
       return '/admin/mfa';
-    case 'set-password':
-      return '/auth/set-password';
     case 'suspended':
       return '/login?suspended=1';
     default:

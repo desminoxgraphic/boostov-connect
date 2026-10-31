@@ -67,9 +67,9 @@ test('admin 2FA is optional, and enforced once turned on', () => {
   assert.equal(apiStatusFor('mfa'), 403);
 });
 
-test('reseller states: active allowed, pending sets password, suspended blocked', () => {
+test('reseller states: active allowed, invited goes to sign-in, suspended blocked', () => {
   assert.equal(decideAccess('reseller', reseller()), 'allow');
-  assert.equal(decideAccess('reseller', reseller({ resellerStatus: 'pending' })), 'set-password');
+  assert.equal(decideAccess('reseller', reseller({ resellerStatus: 'pending' })), 'login');
   assert.equal(decideAccess('reseller', reseller({ resellerStatus: 'suspended' })), 'suspended');
   assert.equal(decideAccess('reseller', admin({ aal: 'aal2', hasTotp: true })), 'forbidden');
 });
@@ -178,7 +178,7 @@ function walk(dir: string): string[] {
 
 test('every admin API route checks the super admin server-side', () => {
   const files = walk(resolve('app/api/admin')).filter((f) => f.endsWith('route.ts'));
-  assert.ok(files.length >= 7);
+  assert.ok(files.length >= 6);
   for (const file of files) {
     const src = readFileSync(file, 'utf8');
     const handlers = src.match(/export async function (GET|POST|PUT|PATCH|DELETE)/g) ?? [];
@@ -264,4 +264,16 @@ test('tap counts are de-duplicated per visitor and the public key cannot write e
   assert.match(route, /MAX_EVENTS_PER_VISITOR_HOUR/);
   const sql = readFileSync(resolve('supabase/migrations/202610310001_protect_tap_counts.sql'), 'utf8');
   assert.match(sql, /drop policy if exists "Public event insert"/);
+});
+
+test('one login page: invite-only, Google or email code, password only until the admin used it', () => {
+  const send = readFileSync(resolve('app/api/auth/otp/send/route.ts'), 'utf8');
+  assert.match(send, /invited_access/);
+  assert.match(send, /shouldCreateUser: false/);
+  const post = readFileSync(resolve('lib/post-login.ts'), 'utf8');
+  assert.match(post, /deleteUser\(ctx\.userId\)/, 'an uninvited Google sign-up is removed again');
+  const pw = readFileSync(resolve('app/api/auth/login/route.ts'), 'utf8');
+  assert.match(pw, /passwordLoginEnabled\(\)/);
+  assert.equal(pageRedirectFor('admin', 'login'), '/login');
+  assert.equal(pageRedirectFor('reseller', 'login'), '/login');
 });

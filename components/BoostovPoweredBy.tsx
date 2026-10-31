@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import BrandMark from './BrandMark';
 import { cn } from '@/lib/utils';
 
 /**
@@ -30,7 +30,7 @@ export default function BoostovPoweredBy({
     >
       Powered by
       <span className="bc-powered-mark">
-        <Image src="/boostov-logo.png" alt="" width={14} height={14} />
+        <BrandMark size={14} adaptive />
       </span>
       <span className={cn('font-bold', tone === 'light' ? 'text-[#26262B]' : 'text-white/85')}>
         boostov<span className="text-[#2563EB]">.ma</span>
